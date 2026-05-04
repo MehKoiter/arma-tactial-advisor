@@ -16,6 +16,7 @@ import {
   DEFAULT_REINFORCE_CONFIG,
 } from '@/scoring/scoringConfig'
 import { usePositionNotesContext } from '@/providers/PositionNotesContext'
+import { useMobsContext } from '@/providers/MobsContext'
 import everonCAPs from '@/data/everonCAPs'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
 
@@ -47,6 +48,7 @@ const RecommendationContext = createContext<RecommendationContextValue | null>(n
 export function RecommendationProvider({ children }: { children: ReactNode }) {
   const { state } = useOwnership()
   const { notes } = usePositionNotesContext()
+  const { mobs } = useMobsContext()
   const [tab, setTab] = useState<RecommendTab>('primary')
   const [showSupplies, setShowSupplies] = useState(false)
 
@@ -56,21 +58,28 @@ export function RecommendationProvider({ children }: { children: ReactNode }) {
   // Reset to primary tab when vehicle changes
   useEffect(() => { setTab('primary') }, [vehicleType])
 
+  const factionMobs = useMemo(() => {
+    const out: Partial<Record<'US' | 'RUS', { lng: number; lat: number }>> = {}
+    if (mobs.US) out.US = { lng: mobs.US.lng, lat: mobs.US.lat }
+    if (mobs.RUS) out.RUS = { lng: mobs.RUS.lng, lat: mobs.RUS.lat }
+    return out
+  }, [mobs])
+
   const primaryList = useMemo<(ScoredCAP | AttackScoredCAP | StrikeScoredCAP | ResupplyScoredCAP)[]>(() => {
     if (vehicleType === 'ATTACK_HELO')
       return scoreStrikeTargets(everonCAPs, state, DEFAULT_ATTACK_HELO_CONFIG, notes, everonSupplyPoints)
     if (vehicleType === 'TRANSPORT_HELO')
       return scoreResupplyTargets(everonCAPs, state, DEFAULT_TRANSPORT_HELO_CONFIG, notes, everonSupplyPoints)
-    return scoreCandidates(everonCAPs, state, DEFAULT_SCORING_CONFIG, notes, everonSupplyPoints)
-  }, [state, notes, vehicleType])
+    return scoreCandidates(everonCAPs, state, DEFAULT_SCORING_CONFIG, notes, everonSupplyPoints, factionMobs)
+  }, [state, notes, vehicleType, factionMobs])
 
   const secondaryList = useMemo<AnyScored[]>(() => {
     if (vehicleType === 'LAV')
-      return scoreAttackCandidates(everonCAPs, state, DEFAULT_ATTACK_CONFIG, notes, everonSupplyPoints)
+      return scoreAttackCandidates(everonCAPs, state, DEFAULT_ATTACK_CONFIG, notes, everonSupplyPoints, factionMobs)
     if (vehicleType === 'TRANSPORT_HELO')
       return scoreReinforceTargets(everonCAPs, state, DEFAULT_REINFORCE_CONFIG, notes, everonSupplyPoints)
     return []
-  }, [state, notes, vehicleType])
+  }, [state, notes, vehicleType, factionMobs])
 
   const value = useMemo(() => ({
     tab,

@@ -16,7 +16,17 @@ import { RADIO_RANGE_METRES } from '@/data/radioConfig'
 import { METRES_PER_DEGREE } from '@/data/mapConfig'
 import { findArticulationPoints } from '@/scoring/graphAnalysis'
 
-function distanceM(a: CAP, b: CAP): number {
+/** Synthetic id used to represent a faction MOB inside the radio graph. */
+export const MOB_NODE_ID = '__MOB__'
+
+export interface MobAnchor {
+  /** Map longitude. */
+  lng: number
+  /** Map latitude. */
+  lat: number
+}
+
+function distanceM(a: { coords: { lng: number; lat: number } }, b: { coords: { lng: number; lat: number } }): number {
   const dx = (a.coords.lng - b.coords.lng) * METRES_PER_DEGREE
   const dy = (a.coords.lat - b.coords.lat) * METRES_PER_DEGREE
   return Math.hypot(dx, dy)
@@ -29,6 +39,8 @@ export interface RadioNetworkAnalysis {
   cutVertices: Set<string>
   /** Whether the faction has a designated HQ that is currently valid (owned + radio-active). */
   hqValid: boolean
+  /** Whether the faction has a placed MOB that is acting as the anchor. */
+  mobAnchored: boolean
 }
 
 /**
@@ -45,6 +57,7 @@ function buildRadioGraph(
   radio: ReadonlySet<string>,
   faction: Exclude<Owner, 'neutral'>,
   rangeM: number,
+  mob: MobAnchor | null,
 ): { graph: CAP[]; nodes: Set<string> } {
   const candidates = caps.filter(
     (c) => (ownership[c.id] ?? 'neutral') === faction && radio.has(c.id),
@@ -56,8 +69,33 @@ function buildRadioGraph(
       if (other.id === c.id) continue
       if (distanceM(c, other) <= rangeM) neighbors.push(other.id)
     }
+    // MOB acts as an always-on radio relay for its faction. Any CAP
+    // within range gets an edge to the synthetic MOB node.
+    if (mob && distanceM(c, { coords: { lng: mob.lng, lat: mob.lat } }) <= rangeM) {
+      neighbors.push(MOB_NODE_ID)
+    }
     return { ...c, neighbors }
   })
+  if (mob) {
+    nodes.add(MOB_NODE_ID)
+    const mobNeighbors: string[] = []
+    for (const c of candidates) {
+      if (distanceM(c, { coords: { lng: mob.lng, lat: mob.lat } }) <= rangeM) {
+        mobNeighbors.push(c.id)
+      }
+    }
+    // Synthetic CAP node for the MOB. Coordinates are filled in for completeness;
+    // the rest of the metadata is irrelevant to the network analysis.
+    graph.push({
+      id: MOB_NODE_ID,
+      name: 'MOB',
+      shortName: 'MOB',
+      type: 'major',
+      coords: { lng: mob.lng, lat: mob.lat },
+      neighbors: mobNeighbors,
+      zone: 'central',
+    } as CAP)
+  }
   return { graph, nodes }
 }
 
@@ -115,8 +153,9 @@ export function analyzeRadioNetwork(
   state: OwnershipState,
   faction: Exclude<Owner, 'neutral'>,
   rangeM: number = RADIO_RANGE_METRES,
+  mob: MobAnchor | null = null,
 ): RadioNetworkAnalysis {
-  const { graph, nodes } = buildRadioGraph(caps, state.ownership, state.radio, faction, rangeM)
+  const { graph, nodes } = buildRadioGraph(caps, state.ownership, state.radio, faction, rangeM, mob)
 
   // Find HQ for this faction: at most one entry in state.hq whose owner === faction
   let hqId: string | null = null
@@ -127,12 +166,23 @@ export function analyzeRadioNetwork(
     }
   }
   const hqValid = hqId != null && nodes.has(hqId)
+  const mobAnchored = mob != null
 
-  const onlineSet = hqValid && hqId != null
-    ? bfsFrom(graph, hqId)
-    : largestComponent(graph, nodes)
+  // Anchor priority: HQ (if valid) > MOB (if placed) > largest component fallback.
+  let onlineSet: Set<string>
+  if (hqValid && hqId != null) {
+    onlineSet = bfsFrom(graph, hqId)
+  } else if (mobAnchored) {
+    onlineSet = bfsFrom(graph, MOB_NODE_ID)
+  } else {
+    onlineSet = largestComponent(graph, nodes)
+  }
 
   const cutVertices = findArticulationPoints(graph, nodes)
 
-  return { onlineSet, cutVertices, hqValid }
+  // Strip the synthetic MOB token before returning so callers only see real CAPs.
+  onlineSet.delete(MOB_NODE_ID)
+  cutVertices.delete(MOB_NODE_ID)
+
+  return { onlineSet, cutVertices, hqValid, mobAnchored }
 }

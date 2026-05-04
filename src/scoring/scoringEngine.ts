@@ -4,7 +4,7 @@ import type { ScoringConfig, AttackScoringConfig, AttackHeloConfig, TransportHel
 import type { PositionNote } from '@/data/positionNotes'
 import type { SupplyPoint } from '@/data/everonSupplyPoints'
 import { bfsHopsFiltered, findArticulationPoints } from './graphAnalysis'
-import { analyzeRadioNetwork } from './radioNetwork'
+import { analyzeRadioNetwork, type MobAnchor } from './radioNetwork'
 
 // Virtual coordinate system: 1 degree = METRES_PER_DEGREE metres (same as mapConfig)
 const METRES_PER_DEGREE = 111_320
@@ -197,12 +197,15 @@ export function calcMovementFeasibility(
 // Main scorer
 // ---------------------------------------------------------------------------
 
+export type FactionMobs = Partial<Record<PlayerTeam, MobAnchor>>
+
 export function scoreCandidates(
   caps: CAP[],
   ownershipState: OwnershipState,
   config: ScoringConfig,
   notes: PositionNote[] = [],
   supplyPoints: SupplyPoint[] = [],
+  mobs: FactionMobs = {},
 ): ScoredCAP[] {
   const { ownership, lavPosition, playerTeam, underAttack, attacking } = ownershipState
   const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
@@ -211,10 +214,11 @@ export function scoreCandidates(
   const friendlySet = buildFriendlyTransitSet(caps, ownership, playerTeam)
   const friendlyChokepoints = findArticulationPoints(caps, friendlySet)
 
-  // Radio-network analysis for the player faction. Only meaningful when there
-  // is at least some active network to compare against.
-  const radioAnalysis = analyzeRadioNetwork(caps, ownershipState, playerTeam)
-  const radioActive = radioAnalysis.hqValid || radioAnalysis.onlineSet.size >= 2
+  // Radio-network analysis for the player faction. MOBs act as built-in
+  // always-on radio relays, so we feed the placed MOB (if any) as the anchor.
+  const myMob = mobs[playerTeam] ?? null
+  const radioAnalysis = analyzeRadioNetwork(caps, ownershipState, playerTeam, undefined, myMob)
+  const radioActive = radioAnalysis.hqValid || radioAnalysis.mobAnchored || radioAnalysis.onlineSet.size >= 2
 
   const scored: ScoredCAP[] = caps
     .filter((cap) => {
@@ -338,6 +342,7 @@ export function scoreAttackCandidates(
   config: AttackScoringConfig,
   notes: PositionNote[] = [],
   supplyPoints: SupplyPoint[] = [],
+  mobs: FactionMobs = {},
 ): AttackScoredCAP[] {
   const { ownership, lavPosition, playerTeam, underAttack, attacking } = ownershipState
   const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
@@ -348,11 +353,13 @@ export function scoreAttackCandidates(
   const enemySet = buildEnemyHoldSet(caps, ownership, enemy)
   const enemyChokepoints = findArticulationPoints(caps, enemySet)
 
-  // Radio-network analyses for both factions.
-  const myRadio = analyzeRadioNetwork(caps, ownershipState, playerTeam)
-  const enemyRadio = analyzeRadioNetwork(caps, ownershipState, enemy)
-  const myRadioActive = myRadio.hqValid || myRadio.onlineSet.size >= 2
-  const enemyRadioActive = enemyRadio.hqValid || enemyRadio.onlineSet.size >= 2
+  // Radio-network analyses for both factions, with MOB anchors.
+  const myMob = mobs[playerTeam] ?? null
+  const enemyMob = mobs[enemy] ?? null
+  const myRadio = analyzeRadioNetwork(caps, ownershipState, playerTeam, undefined, myMob)
+  const enemyRadio = analyzeRadioNetwork(caps, ownershipState, enemy, undefined, enemyMob)
+  const myRadioActive = myRadio.hqValid || myRadio.mobAnchored || myRadio.onlineSet.size >= 2
+  const enemyRadioActive = enemyRadio.hqValid || enemyRadio.mobAnchored || enemyRadio.onlineSet.size >= 2
 
   const scored = caps
     .filter((cap) => {

@@ -79,3 +79,46 @@ export function computeRadioLinks(
   }
   return links
 }
+
+export interface MobRadioAnchor {
+  faction: Exclude<Owner, 'neutral'>
+  lng: number
+  lat: number
+}
+
+/**
+ * Compute radio links from each placed MOB to every same-faction owned +
+ * radio-active CAP within range. MOBs have built-in radio antennae and
+ * always participate in the network when present.
+ */
+export function computeMobRadioLinks(
+  caps: ReadonlyArray<CAP>,
+  ownership: Record<string, Owner>,
+  radio: ReadonlySet<string>,
+  mobs: ReadonlyArray<MobRadioAnchor>,
+  rangeM: number = RADIO_RANGE_METRES,
+): RadioLink[] {
+  const out: RadioLink[] = []
+  for (const m of mobs) {
+    for (const c of caps) {
+      const owner = ownership[c.id] ?? 'neutral'
+      if (owner !== m.faction) continue
+      if (!radio.has(c.id)) continue
+      const dx = (c.coords.lng - m.lng) * METRES_PER_DEGREE
+      const dy = (c.coords.lat - m.lat) * METRES_PER_DEGREE
+      const d = Math.hypot(dx, dy)
+      if (d > rangeM) continue
+      out.push({
+        fromId: `MOB_${m.faction}`,
+        toId: c.id,
+        fromLng: m.lng,
+        fromLat: m.lat,
+        toLng: c.coords.lng,
+        toLat: c.coords.lat,
+        owner: m.faction,
+        distanceM: d,
+      })
+    }
+  }
+  return out
+}

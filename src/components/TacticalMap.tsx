@@ -19,7 +19,7 @@ import type { MobFaction } from '@/data/mobs'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
-import { computeRadioLinks } from '@/data/radioConfig'
+import { computeRadioLinks, computeMobRadioLinks } from '@/data/radioConfig'
 import { MapContextMenu } from './MapContextMenu'
 import styles from './TacticalMap.module.css'
 
@@ -185,7 +185,12 @@ export function TacticalMap() {
   )
 
   const radioLinksGeoJSON = useMemo(() => {
-    const links = computeRadioLinks(everonCAPs, state.ownership, state.radio)
+    const capLinks = computeRadioLinks(everonCAPs, state.ownership, state.radio)
+    const mobAnchors = (['US', 'RUS'] as const)
+      .map((f) => mobs[f] ? { faction: f, lng: mobs[f]!.lng, lat: mobs[f]!.lat } : null)
+      .filter((x): x is { faction: 'US' | 'RUS'; lng: number; lat: number } => x != null)
+    const mobLinks = computeMobRadioLinks(everonCAPs, state.ownership, state.radio, mobAnchors)
+    const links = [...capLinks, ...mobLinks]
     return {
       type: 'FeatureCollection' as const,
       features: links.map((l) => ({
@@ -200,7 +205,7 @@ export function TacticalMap() {
         properties: { owner: l.owner, distanceM: Math.round(l.distanceM) },
       })),
     }
-  }, [state.ownership, state.radio])
+  }, [state.ownership, state.radio, mobs])
 
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
