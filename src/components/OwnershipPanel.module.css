@@ -86,3 +86,50 @@
   flex-direction: column;
   gap: 5px;
 }
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.group {
+  border-left: 3px solid transparent;
+  padding-left: 8px;
+}
+
+.groupFriendly { border-left-color: #42a5f5; }
+.groupEnemy    { border-left-color: #ef5350; }
+.groupNeutral  { border-left-color: #78909c; }
+
+.groupHeader {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #bcd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.groupCount {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  color: #9aa;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 4px 0;
+  color: #667;
+  font-size: 0.8rem;
+  font-style: italic;
+}
