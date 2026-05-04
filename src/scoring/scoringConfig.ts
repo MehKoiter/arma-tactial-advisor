@@ -34,10 +34,15 @@ export interface ScoringConfig {
    * Reflects coordinated enemy pressure toward this friendly CAP.
    */
   attackingNeighborWeight: number
-  /** Bonus for CAPs near supply depots — strategic resupply access */
+  /** Bonus for CAPs near supply depots — strategic asset access */
   supplyProximityWeight: number
   /** Radius in metres to search for nearby supply depots */
   supplyProximityRadiusMetres: number
+  /**
+   * Bonus for friendly CAPs that are cut vertices in the friendly subgraph —
+   * losing them would sever the network. (Reforger-style chokepoint defence.)
+   */
+  chokepointWeight: number
   /** How many top recommendations to return */
   topN: number
 }
@@ -54,6 +59,7 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   attackingNeighborWeight: 2.0,
   supplyProximityWeight: 1.5,
   supplyProximityRadiusMetres: 1500,
+  chokepointWeight: 3.5,          // strong signal — cut vertices are critical
   topN: 5,
 }
 
@@ -91,6 +97,11 @@ export interface AttackScoringConfig {
   /** Bonus for enemy CAPs near supply depots — capturing grants resupply access */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
+  /**
+   * Bonus for capturing an enemy cut vertex — severs the enemy network.
+   * (Reforger-style chain-cut play.)
+   */
+  chokepointWeight: number
   /** How many top attack recommendations to return */
   topN: number
 }
@@ -109,6 +120,7 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   reliefWeight: 2.5,
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 1500,
+  chokepointWeight: 3.0,
   topN: 5,
 }
 

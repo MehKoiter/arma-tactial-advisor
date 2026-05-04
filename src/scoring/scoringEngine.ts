@@ -3,6 +3,7 @@ import type { Owner, OwnershipState, PlayerTeam } from '@/state/ownershipReducer
 import type { ScoringConfig, AttackScoringConfig, AttackHeloConfig, TransportHeloConfig, ReinforceConfig } from './scoringConfig'
 import type { PositionNote } from '@/data/positionNotes'
 import type { SupplyPoint } from '@/data/everonSupplyPoints'
+import { bfsHopsFiltered, findArticulationPoints } from './graphAnalysis'
 
 // Virtual coordinate system: 1 degree = METRES_PER_DEGREE metres (same as mapConfig)
 const METRES_PER_DEGREE = 111_320
@@ -20,6 +21,8 @@ export interface FactorBreakdown {
   attackingPressure: number
   /** Normalised [0-1] score based on total supply resources within search radius. */
   supplyProximity: number
+  /** 1 if this friendly CAP is a cut vertex in the friendly subgraph (losing it severs the network). */
+  chokepoint: number
 }
 
 export interface ScoredCAP {
@@ -92,6 +95,32 @@ export function bfsHopDistance(
   return Infinity
 }
 
+/** Build the set of CAP IDs the LAV can transit through — same-faction only. */
+function buildFriendlyTransitSet(
+  caps: ReadonlyArray<CAP>,
+  ownership: Record<string, Owner>,
+  playerTeam: PlayerTeam,
+): Set<string> {
+  const s = new Set<string>()
+  for (const c of caps) {
+    if ((ownership[c.id] ?? 'neutral') === playerTeam) s.add(c.id)
+  }
+  return s
+}
+
+/** Build the set of enemy-held CAP IDs (used for enemy-network chokepoint analysis). */
+function buildEnemyHoldSet(
+  caps: ReadonlyArray<CAP>,
+  ownership: Record<string, Owner>,
+  enemy: PlayerTeam,
+): Set<string> {
+  const s = new Set<string>()
+  for (const c of caps) {
+    if ((ownership[c.id] ?? 'neutral') === enemy) s.add(c.id)
+  }
+  return s
+}
+
 /**
  * Supply proximity: normalised [0, 1] score based on total resources of supply points
  * within radiusMetres of the CAP. Capped at maxResources (default 10 000).
@@ -134,15 +163,24 @@ export function calcNotesBias(
   return (avg - 3) / 2
 }
 
-/** Movement feasibility: bonus if CAP is reachable from LAV within maxFeasibleHops */
+/**
+ * Movement feasibility: bonus if CAP is reachable from LAV within maxFeasibleHops,
+ * traversing **only same-faction CAPs** (or, optionally, the target itself for assault).
+ *
+ * `transitSet` should contain the IDs the LAV can pass through. The start and
+ * target nodes are always permitted as endpoints regardless of membership.
+ */
 export function calcMovementFeasibility(
   cap: CAP,
   lavPosition: string | null,
   caps: CAP[],
   maxHops: number,
+  transitSet?: ReadonlySet<string>,
 ): number {
   if (!lavPosition) return 0
-  const dist = bfsHopDistance(lavPosition, cap.id, caps)
+  const dist = transitSet
+    ? bfsHopsFiltered(lavPosition, cap.id, caps, transitSet)
+    : bfsHopDistance(lavPosition, cap.id, caps)
   if (dist === Infinity || dist > maxHops) return 0
   // Linear decay: closer = more bonus
   return (maxHops - dist + 1) / (maxHops + 1)
@@ -162,6 +200,10 @@ export function scoreCandidates(
   const { ownership, lavPosition, playerTeam, underAttack, attacking } = ownershipState
   const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
 
+  // Pre-compute graph-derived sets once per scoring pass.
+  const friendlySet = buildFriendlyTransitSet(caps, ownership, playerTeam)
+  const friendlyChokepoints = findArticulationPoints(caps, friendlySet)
+
   const scored: ScoredCAP[] = caps
     .filter((cap) => {
       const own = ownership[cap.id] ?? 'neutral'
@@ -172,9 +214,10 @@ export function scoreCandidates(
       const enemyPressure = calcEnemyPressure(cap, ownership, enemy)
       const contestedCentrality = calcContestedCentrality(cap, ownership, enemy)
       const overextension = calcOverextension(cap, ownership, enemy)
-      const movementFeasibility = calcMovementFeasibility(cap, lavPosition, caps, config.maxFeasibleHops)
+      const movementFeasibility = calcMovementFeasibility(cap, lavPosition, caps, config.maxFeasibleHops, friendlySet)
       const notesBias = calcNotesBias(cap, notes, config.notesSearchRadiusMetres)
       const supplyProximity = calcSupplyProximity(cap, supplyPoints, config.supplyProximityRadiusMetres)
+      const chokepoint = friendlyChokepoints.has(cap.id) ? 1 : 0
 
       // Live-battle factors from manual flags
       const underAttackUrgency = underAttack.has(cap.id) ? 1 : 0
@@ -190,7 +233,8 @@ export function scoreCandidates(
         notesBias * config.notesBiasWeight +
         underAttackUrgency * config.underAttackUrgencyWeight +
         attackingPressure * config.attackingNeighborWeight +
-        supplyProximity * config.supplyProximityWeight
+        supplyProximity * config.supplyProximityWeight +
+        chokepoint * config.chokepointWeight
 
       const rationale: string[] = []
       if (enemyPressure > 0)
@@ -203,6 +247,8 @@ export function scoreCandidates(
           : 'Mostly surrounded by enemy — overextension risk')
       if (movementFeasibility > 0)
         rationale.push(`Reachable from current LAV position via the CAP graph (≤ ${config.maxFeasibleHops} adjacent CAPs)`)
+      if (chokepoint)
+        rationale.push('Chokepoint — losing this CAP would split the friendly network')
       if (notesBias > 0.15)
         rationale.push(`Field notes rate this area positively (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
       else if (notesBias < -0.15)
@@ -219,7 +265,7 @@ export function scoreCandidates(
       return {
         cap,
         totalScore,
-        factors: { enemyPressure, contestedCentrality, overextensionPenalty: overextension, movementFeasibility, notesBias, underAttackUrgency, attackingPressure, supplyProximity },
+        factors: { enemyPressure, contestedCentrality, overextensionPenalty: overextension, movementFeasibility, notesBias, underAttackUrgency, attackingPressure, supplyProximity, chokepoint },
         rationale,
       }
     })
@@ -244,6 +290,8 @@ export interface AttackScoredCAP {
     momentum: number
     reliefValue: number
     supplyProximity: number
+    /** 1 if this enemy CAP is a cut vertex in the enemy subgraph — capturing severs their network. */
+    chokepoint: number
   }
 }
 
@@ -279,8 +327,8 @@ export function scoreAttackCandidates(
       const enemyNeighbors = cap.neighbors.filter((n) => (ownership[n] ?? 'neutral') === enemy).length
       const isolation = 1 - enemyNeighbors / totalNeighbors
 
-      // Reachability from LAV
-      const movementFeasibility = calcMovementFeasibility(cap, lavPosition, caps, config.maxFeasibleHops)
+      // Reachability from LAV — drives only through friendly territory; target is the endpoint exception
+      const movementFeasibility = calcMovementFeasibility(cap, lavPosition, caps, config.maxFeasibleHops, friendlySet)
 
       // Major base bonus
       const majorBonus = cap.type === 'major' ? 1 : 0
@@ -298,6 +346,9 @@ export function scoreAttackCandidates(
       // additional ones provide diminishing returns rather than runaway score.
       const reliefValue = Math.min(relievedNeighbors, 1)
 
+      // Capturing a cut vertex in the enemy subgraph severs their chain — high strategic value.
+      const chokepoint = enemyChokepoints.has(cap.id) ? 1 : 0
+
       const totalScore =
         friendlySupport  * config.friendlySupportWeight +
         isolation        * config.isolationWeight +
@@ -306,7 +357,8 @@ export function scoreAttackCandidates(
         notesBias        * config.notesBiasWeight +
         momentum         * config.momentumWeight +
         reliefValue      * config.reliefWeight +
-        supplyProximity  * config.supplyProximityWeight
+        supplyProximity  * config.supplyProximityWeight +
+        chokepoint       * config.chokepointWeight
 
       const rationale: string[] = []
       if (friendlyNeighbors > 0)
@@ -331,8 +383,10 @@ export function scoreAttackCandidates(
           : `Capturing this relieves pressure on ${relievedNeighbors} friendly CAPs under attack`)
       if (supplyProximity > 0.1)
         rationale.push('Near supply depot(s) — capturing grants resupply access')
+      if (chokepoint)
+        rationale.push('Enemy chokepoint — capturing severs their network chain')
 
-      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity } }
+      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity, chokepoint } }
     })
 
   return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)
