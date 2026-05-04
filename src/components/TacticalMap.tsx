@@ -57,7 +57,16 @@ const MAP_STYLE = {
   },
   layers: [
     { id: 'background', type: 'background' as const, paint: { 'background-color': '#1a1a2e' } },
-    { id: 'everon-tiles-layer', type: 'raster' as const, source: 'everon-tiles', paint: { 'raster-opacity': 1 } },
+    {
+      id: 'everon-tiles-layer',
+      type: 'raster' as const,
+      source: 'everon-tiles',
+      paint: {
+        'raster-opacity': 1,
+        'raster-fade-duration': 0,
+        'raster-resampling': 'nearest' as const,
+      },
+    },
   ],
 }
 
