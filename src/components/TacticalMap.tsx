@@ -13,6 +13,9 @@ import { RANGEFINDER_RINGS_BY_VEHICLE } from '@/scoring/scoringConfig'
 import type { RouteResult } from '@/routing/routingProvider'
 import { usePositionNotesContext } from '@/providers/PositionNotesContext'
 import { useIndicatorsContext } from '@/providers/IndicatorsContext'
+import { useMobsContext } from '@/providers/MobsContext'
+import { MOB_COLORS, MOB_GLYPH } from '@/data/mobs'
+import type { MobFaction } from '@/data/mobs'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
@@ -82,6 +85,7 @@ export function TacticalMap() {
   const [rangefinderLocked, setRangefinderLocked] = useState(false)
   const [rangefinderCenter, setRangefinderCenter] = useState<{ lng: number; lat: number } | null>(null)
   const { indicators, addIndicator, removeIndicator } = useIndicatorsContext()
+  const { mobs, setMob, clearMob } = useMobsContext()
   const [showNotesHeatmap, setShowNotesHeatmap] = useState(true)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lng: number; lat: number } | null>(null)
 
@@ -112,6 +116,15 @@ export function TacticalMap() {
     if (!contextMenu || !selectedSuggestion) return
     addNote(contextMenu.lng, contextMenu.lat, rating, selectedSuggestion.cap.id)
   }, [contextMenu, selectedSuggestion, addNote])
+
+  const handleSetMob = useCallback((faction: MobFaction) => {
+    if (!contextMenu) return
+    setMob(faction, contextMenu.lng, contextMenu.lat)
+  }, [contextMenu, setMob])
+
+  const handleClearMob = useCallback((faction: MobFaction) => {
+    clearMob(faction)
+  }, [clearMob])
 
   // Active list switches with tab; clear any stale selection on tab change
   const activeList: AnyScored[] = tab === 'secondary' ? secondaryList : primaryList
@@ -454,6 +467,25 @@ export function TacticalMap() {
           )
         })}
 
+        {(['US', 'RUS'] as const).map((faction) => {
+          const m = mobs[faction]
+          if (!m) return null
+          const isFriendly = faction === state.playerTeam
+          return (
+            <Marker key={`mob-${faction}`} longitude={m.lng} latitude={m.lat} anchor="center">
+              <div
+                className={styles.mobMarker}
+                style={{ '--mob-color': MOB_COLORS[faction] } as React.CSSProperties}
+                title={`${faction} MOB${isFriendly ? ' (friendly)' : ' (enemy — discovered)'} — right-click map to move or clear`}
+                aria-label={`${faction} MOB`}
+              >
+                <span className={styles.mobGlyph}>{MOB_GLYPH}</span>
+                <span className={styles.mobLabel}>{faction} MOB</span>
+              </div>
+            </Marker>
+          )
+        })}
+
         {indicators.map((ind) => {
           const type = INDICATOR_BY_ID[ind.typeId]
           if (!type) return null
@@ -496,6 +528,11 @@ export function TacticalMap() {
       </MapGL>
 
       <div className={styles.rangefinderControls}>
+        {!mobs[state.playerTeam] && (
+          <div className={styles.mobHint} role="status">
+            ★ Right-click the map to set your <strong>{state.playerTeam} MOB</strong>
+          </div>
+        )}
         <div className={styles.rangefinderRow}>
           <button
             type="button"
@@ -684,8 +721,13 @@ export function TacticalMap() {
           x={contextMenu.x}
           y={contextMenu.y}
           targetCapName={selectedSuggestion?.cap.name ?? null}
+          playerTeam={state.playerTeam}
+          hasFriendlyMob={!!mobs[state.playerTeam]}
+          hasEnemyMob={!!mobs[state.playerTeam === 'US' ? 'RUS' : 'US']}
           onPlace={handlePlaceIndicator}
           onRate={handleRatePosition}
+          onSetMob={handleSetMob}
+          onClearMob={handleClearMob}
           onClose={() => setContextMenu(null)}
         />
       )}

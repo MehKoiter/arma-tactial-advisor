@@ -7,6 +7,7 @@ import { RoutingProvider } from './routing/RoutingContext.tsx'
 import { InputProviderProvider } from './providers/InputProviderContext.tsx'
 import { PositionNotesProvider } from './providers/PositionNotesContext.tsx'
 import { IndicatorsProvider } from './providers/IndicatorsContext.tsx'
+import { MobsProvider } from './providers/MobsContext.tsx'
 import { RecommendationProvider } from './providers/RecommendationContext.tsx'
 import { RoomProvider } from './providers/RoomContext.tsx'
 import { Landing } from './components/Landing.tsx'
@@ -22,9 +23,11 @@ createRoot(document.getElementById('root')!).render(
             <InputProviderProvider>
               <PositionNotesProvider>
                 <IndicatorsProvider>
-                  <RecommendationProvider>
-                    <App />
-                  </RecommendationProvider>
+                  <MobsProvider>
+                    <RecommendationProvider>
+                      <App />
+                    </RecommendationProvider>
+                  </MobsProvider>
                 </IndicatorsProvider>
               </PositionNotesProvider>
             </InputProviderProvider>

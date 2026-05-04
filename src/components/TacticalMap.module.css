@@ -376,6 +376,54 @@
   pointer-events: none;
 }
 
+/* ── MOB markers ─────────────────────────────────────────────────────────── */
+.mobMarker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: auto;
+  cursor: help;
+}
+
+.mobGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(16, 16, 28, 0.92);
+  border: 2.5px solid var(--mob-color, #42a5f5);
+  color: var(--mob-color, #42a5f5);
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 12px var(--mob-color, #42a5f5), 0 2px 8px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 0 4px var(--mob-color, #42a5f5);
+}
+
+.mobLabel {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--mob-color, #42a5f5);
+  background: rgba(16, 16, 28, 0.85);
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.mobHint {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  color: #ffd54f;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+}
+
 .suggestionMarker {
   display: flex;
   flex-direction: column;
