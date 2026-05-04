@@ -309,6 +309,12 @@ export function scoreAttackCandidates(
   const { ownership, lavPosition, playerTeam, underAttack, attacking } = ownershipState
   const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
 
+  // Friendly transit graph (LAV can drive through friendly CAPs to the assault target).
+  const friendlySet = buildFriendlyTransitSet(caps, ownership, playerTeam)
+  // Enemy chokepoints — capturing one severs their network.
+  const enemySet = buildEnemyHoldSet(caps, ownership, enemy)
+  const enemyChokepoints = findArticulationPoints(caps, enemySet)
+
   const scored = caps
     .filter((cap) => {
       // Must be enemy-held
