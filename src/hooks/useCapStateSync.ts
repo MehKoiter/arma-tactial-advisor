@@ -38,7 +38,8 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
         owner: 'neutral' as Owner,
         under_attack: false,
         attacking: false,
-        radio: false,
+        // Radios default ON — reset puts every CAP back on the network.
+        radio: true,
         is_hq: false,
       }))
       await supabase.from('cap_ownership').upsert(rows, { onConflict: 'room_id,cap_id' })

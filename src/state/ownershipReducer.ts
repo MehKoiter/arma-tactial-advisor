@@ -83,7 +83,8 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
         ownership: Object.fromEntries(Object.keys(state.ownership).map((id) => [id, 'neutral'])),
         underAttack: new Set(),
         attacking: new Set(),
-        radio: new Set(),
+        // Radios default ON for all CAPs — must be explicitly toggled off when downed.
+        radio: new Set(Object.keys(state.ownership)),
         hq: new Set(),
       }
 
@@ -142,13 +143,15 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       const ownership = { ...state.ownership }
       const ua = new Set<string>()
       const atk = new Set<string>()
-      const r = new Set<string>()
+      // Radios default ON — start with every known CAP and remove only those
+      // explicitly persisted as down (radio === false).
+      const r = new Set<string>(Object.keys(state.ownership))
       const hq = new Set<string>()
       for (const row of action.rows) {
         ownership[row.cap_id] = row.owner
         if (row.under_attack) ua.add(row.cap_id)
         if (row.attacking) atk.add(row.cap_id)
-        if (row.radio) r.add(row.cap_id)
+        if (row.radio) r.add(row.cap_id); else r.delete(row.cap_id)
         if (row.is_hq) hq.add(row.cap_id)
       }
       return { ...state, ownership, underAttack: ua, attacking: atk, radio: r, hq }
@@ -203,7 +206,9 @@ export function buildInitialOwnership(capIds: string[]): OwnershipState {
     vehicleType: 'LAV',
     underAttack: new Set(),
     attacking: new Set(),
-    radio: new Set(),
+    // Radios default ON for every CAP. Toggle off in the panel when one goes
+    // down or hasn't been built yet.
+    radio: new Set(capIds),
     hq: new Set(),
   }
 }
