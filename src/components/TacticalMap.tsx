@@ -16,6 +16,7 @@ import { useIndicatorsContext } from '@/providers/IndicatorsContext'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
+import { computeRadioLinks } from '@/data/radioConfig'
 import { MapContextMenu } from './MapContextMenu'
 import styles from './TacticalMap.module.css'
 
@@ -170,6 +171,24 @@ export function TacticalMap() {
     [routes],
   )
 
+  const radioLinksGeoJSON = useMemo(() => {
+    const links = computeRadioLinks(everonCAPs, state.ownership, state.radio)
+    return {
+      type: 'FeatureCollection' as const,
+      features: links.map((l) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: [
+            [l.fromLng, l.fromLat],
+            [l.toLng, l.toLat],
+          ],
+        },
+        properties: { owner: l.owner, distanceM: Math.round(l.distanceM) },
+      })),
+    }
+  }, [state.ownership, state.radio])
+
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
   // heatmap-radius uses exponential zoom interpolation to keep the blob a fixed geographic size (~300 m).
@@ -279,6 +298,47 @@ export function TacticalMap() {
                 'line-width': 2,
                 'line-dasharray': [4, 2],
                 'line-opacity': 0.8,
+              }}
+              layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+          </Source>
+        )}
+
+        {radioLinksGeoJSON.features.length > 0 && (
+          <Source id="radio-links" type="geojson" data={radioLinksGeoJSON}>
+            {/* Glow halo */}
+            <Layer
+              id="radio-links-glow"
+              type="line"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'owner'],
+                  'US', '#42a5f5',
+                  'RUS', '#ef5350',
+                  '#ef5350',
+                ] as ExpressionSpecification,
+                'line-width': 6,
+                'line-opacity': 0.25,
+                'line-blur': 3,
+              }}
+              layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+            {/* Core line — ARMA-style segmented broadcast */}
+            <Layer
+              id="radio-links-line"
+              type="line"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'owner'],
+                  'US', '#64b5f6',
+                  'RUS', '#ef5350',
+                  '#ef5350',
+                ] as ExpressionSpecification,
+                'line-width': 1.5,
+                'line-opacity': 0.9,
+                'line-dasharray': [2, 2],
               }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />

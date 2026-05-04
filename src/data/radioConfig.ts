@@ -1,0 +1,81 @@
+/**
+ * Radio-network model — inspired by ARMA Reforger's antenna chain.
+ *
+ * A CAP is "in the network" when:
+ *   1. It is owned (US or RUS), AND
+ *   2. Its `radio` flag is enabled (antenna intact / powered), AND
+ *   3. It is within RADIO_RANGE_METRES of another same-faction radio-active CAP.
+ *
+ * Two such CAPs form a direct radio link. The full network is the connected
+ * subgraph of links rooted at any HQ-equivalent node.
+ *
+ * The signal model is a simplification of the Friis transmission equation:
+ *     P_r = P_t · (Gt · Gr · λ²) / (4π d)²
+ * Game terrain density adds a path-loss coefficient. Without terrain data we
+ * approximate by a hard cutoff at RADIO_RANGE_METRES; refine later by reducing
+ * effective range over forested / mountainous terrain.
+ */
+
+import { METRES_PER_DEGREE } from './mapConfig'
+import type { CAP } from './capSchema'
+import type { Owner } from '@/state/ownershipReducer'
+
+/** Maximum line-of-sight transmission distance in metres (~Reforger Conflict default). */
+export const RADIO_RANGE_METRES = 3000
+
+export interface RadioLink {
+  fromId: string
+  toId: string
+  fromLng: number
+  fromLat: number
+  toLng: number
+  toLat: number
+  owner: Exclude<Owner, 'neutral'>
+  /** Centre-to-centre distance in metres (informational). */
+  distanceM: number
+}
+
+/** Approximate planar distance in metres between two CAPs (good enough at Everon scale). */
+function distanceMetres(a: CAP, b: CAP): number {
+  const dx = (a.coords.lng - b.coords.lng) * METRES_PER_DEGREE
+  const dy = (a.coords.lat - b.coords.lat) * METRES_PER_DEGREE
+  return Math.hypot(dx, dy)
+}
+
+/**
+ * Compute every direct radio link in the current state.
+ * Returns one entry per unordered pair (no duplicates).
+ */
+export function computeRadioLinks(
+  caps: ReadonlyArray<CAP>,
+  ownership: Record<string, Owner>,
+  radio: ReadonlySet<string>,
+  rangeM: number = RADIO_RANGE_METRES,
+): RadioLink[] {
+  const active = caps.filter((c) => {
+    const o = ownership[c.id] ?? 'neutral'
+    return o !== 'neutral' && radio.has(c.id)
+  })
+
+  const links: RadioLink[] = []
+  for (let i = 0; i < active.length; i++) {
+    for (let j = i + 1; j < active.length; j++) {
+      const a = active[i]
+      const b = active[j]
+      if (ownership[a.id] !== ownership[b.id]) continue // factions don't share networks
+      const d = distanceMetres(a, b)
+      if (d > rangeM) continue
+      links.push({
+        fromId: a.id,
+        toId: b.id,
+        fromLng: a.coords.lng,
+        fromLat: a.coords.lat,
+        toLng: b.coords.lng,
+        toLat: b.coords.lat,
+        owner: ownership[a.id] as Exclude<Owner, 'neutral'>,
+        distanceM: d,
+      })
+    }
+  }
+  return links
+}
