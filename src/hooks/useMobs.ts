@@ -32,8 +32,10 @@ export function useMobs(): MobsState {
       .from('mobs')
       .select('*')
       .eq('room_id', roomId)
-      .then(({ data }) => {
-        if (data) {
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn('[useMobs] fetch failed:', error.message)
+        } else if (data) {
           const next: Partial<Record<MobFaction, MobMarker>> = {}
           for (const r of data as MobRow[]) next[r.faction] = rowToMob(r)
           setMobs(next)

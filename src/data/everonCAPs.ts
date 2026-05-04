@@ -53,11 +53,11 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_MEAUX',        'Meaux',       'MEX', 'minor',  4517.52,   9467.668,
-    ['CAP_AIRPORT', 'CAP_ST_PHILLIPE', 'CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_MILITARY_HOSPITAL'],
+    ['CAP_AIRPORT', 'CAP_ST_PHILLIPE', 'CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_MILITARY_HOSPITAL', 'CAP_HORNBEAM_VALLEY'],
     'north'),
 
   cap('CAP_TYRONE',       'Tyrone',      'TYR', 'minor',  4948.837,  9075.68,
-    ['CAP_ST_PHILLIPE', 'CAP_MEAUX', 'CAP_POWER_PLANT', 'CAP_ANDRES_BEACON', 'CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_KERMOVAN', 'CAP_MILITARY_HOSPITAL'],
+    ['CAP_ST_PHILLIPE', 'CAP_MEAUX', 'CAP_POWER_PLANT', 'CAP_ANDRES_BEACON', 'CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_KERMOVAN', 'CAP_MILITARY_HOSPITAL', 'CAP_HORNBEAM_VALLEY'],
     'north'),
 
   cap('CAP_ANDRES_BEACON','Andres Beacon','AND', 'minor',  6843.832,  8191.218,
@@ -65,7 +65,7 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_GRAVETTE',     'Gravette',    'GRV', 'minor',  4128.282,  7792.364,
-    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MILITARY_HOSPITAL'],
+    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MILITARY_HOSPITAL', 'CAP_HORNBEAM_VALLEY'],
     'central'),
 
   cap('CAP_MONTIGNAC',    'Montignac',   'MON', 'minor',  4775.641,  7086.945,
@@ -73,7 +73,7 @@ const everonCAPs: CAPDataset = [
     'central'),
 
   cap('CAP_VILLENEUVE',   'Villeneuve',  'VIL', 'minor',  2847.008,  6339.848,
-    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS', 'CAP_OLD_WOOD'],
+    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS', 'CAP_OLD_WOOD', 'CAP_CALVARY_HILL'],
     'central'),
 
   cap('CAP_PROVINS',      'Provins',     'PRV', 'minor',  5488.17,   6083.411,
@@ -118,20 +118,28 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_MILITARY_HOSPITAL', 'Military Hospital', 'HSP', 'minor', 3904.698, 8450.042,
-    ['CAP_GRAVETTE', 'CAP_TYRONE', 'CAP_MEAUX'],
+    ['CAP_GRAVETTE', 'CAP_TYRONE', 'CAP_MEAUX', 'CAP_HORNBEAM_VALLEY'],
     'north'),
 
   cap('CAP_OLD_WOOD',     'Old Wood',        'OWD', 'minor',  3293.234,  4488.741,
-    ['CAP_VILLENEUVE', 'CAP_MORTON', 'CAP_MORTON_VALLEY'],
+    ['CAP_VILLENEUVE', 'CAP_MORTON', 'CAP_MORTON_VALLEY', 'CAP_CALVARY_HILL'],
     'west'),
 
   cap('CAP_MORTON_VALLEY','Morton Valley',   'MVL', 'minor',  4517.589,  4967.065,
-    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_OLD_WOOD', 'CAP_PROVINS'],
+    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_OLD_WOOD', 'CAP_PROVINS', 'CAP_CALVARY_HILL'],
     'central'),
 
   cap('CAP_LARUNS',       'Laruns',          'LAR', 'minor',  7429.288,  5318.843,
     ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI'],
     'east'),
+
+  cap('CAP_CALVARY_HILL', 'Calvary Hill',    'CAL', 'minor',  3500,      5700,
+    ['CAP_VILLENEUVE', 'CAP_OLD_WOOD', 'CAP_MORTON_VALLEY'],
+    'west'),
+
+  cap('CAP_HORNBEAM_VALLEY', 'Hornbeam Valley', 'HBV', 'minor',  5100,   8300,
+    ['CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_MEAUX', 'CAP_MILITARY_HOSPITAL'],
+    'north'),
 ]
 
 export default everonCAPs
