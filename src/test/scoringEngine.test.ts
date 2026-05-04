@@ -28,6 +28,7 @@ function makeOwnership(map: Record<string, string>): OwnershipState {
     underAttack: new Set(),
     attacking: new Set(),
     radio: new Set(),
+    hq: new Set(),
   }
 }
 

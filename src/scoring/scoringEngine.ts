@@ -4,6 +4,7 @@ import type { ScoringConfig, AttackScoringConfig, AttackHeloConfig, TransportHel
 import type { PositionNote } from '@/data/positionNotes'
 import type { SupplyPoint } from '@/data/everonSupplyPoints'
 import { bfsHopsFiltered, findArticulationPoints } from './graphAnalysis'
+import { analyzeRadioNetwork } from './radioNetwork'
 
 // Virtual coordinate system: 1 degree = METRES_PER_DEGREE metres (same as mapConfig)
 const METRES_PER_DEGREE = 111_320
@@ -23,6 +24,12 @@ export interface FactorBreakdown {
   supplyProximity: number
   /** 1 if this friendly CAP is a cut vertex in the friendly subgraph (losing it severs the network). */
   chokepoint: number
+  /** 1 if this friendly CAP is connected to the HQ-rooted radio network. */
+  radioConnected: number
+  /** 1 if this friendly CAP is owned but NOT in the HQ-rooted radio network. */
+  radioIsolated: number
+  /** 1 if this friendly CAP is a cut vertex in the radio subgraph specifically. */
+  radioChokepoint: number
 }
 
 export interface ScoredCAP {
@@ -204,6 +211,11 @@ export function scoreCandidates(
   const friendlySet = buildFriendlyTransitSet(caps, ownership, playerTeam)
   const friendlyChokepoints = findArticulationPoints(caps, friendlySet)
 
+  // Radio-network analysis for the player faction. Only meaningful when there
+  // is at least some active network to compare against.
+  const radioAnalysis = analyzeRadioNetwork(caps, ownershipState, playerTeam)
+  const radioActive = radioAnalysis.hqValid || radioAnalysis.onlineSet.size >= 2
+
   const scored: ScoredCAP[] = caps
     .filter((cap) => {
       const own = ownership[cap.id] ?? 'neutral'
@@ -218,6 +230,12 @@ export function scoreCandidates(
       const notesBias = calcNotesBias(cap, notes, config.notesSearchRadiusMetres)
       const supplyProximity = calcSupplyProximity(cap, supplyPoints, config.supplyProximityRadiusMetres)
       const chokepoint = friendlyChokepoints.has(cap.id) ? 1 : 0
+
+      // Radio-network factors — only contribute when the player has a real network.
+      const onNetwork = radioAnalysis.onlineSet.has(cap.id)
+      const radioConnected = radioActive && onNetwork ? 1 : 0
+      const radioIsolated = radioActive && !onNetwork ? 1 : 0
+      const radioChokepoint = radioActive && radioAnalysis.cutVertices.has(cap.id) ? 1 : 0
 
       // Live-battle factors from manual flags
       const underAttackUrgency = underAttack.has(cap.id) ? 1 : 0
@@ -234,7 +252,10 @@ export function scoreCandidates(
         underAttackUrgency * config.underAttackUrgencyWeight +
         attackingPressure * config.attackingNeighborWeight +
         supplyProximity * config.supplyProximityWeight +
-        chokepoint * config.chokepointWeight
+        chokepoint * config.chokepointWeight +
+        radioConnected * config.radioConnectedWeight -
+        radioIsolated * config.radioIsolatedPenalty +
+        radioChokepoint * config.radioChokepointWeight
 
       const rationale: string[] = []
       if (enemyPressure > 0)
@@ -249,6 +270,12 @@ export function scoreCandidates(
         rationale.push(`Reachable from current LAV position via the CAP graph (≤ ${config.maxFeasibleHops} adjacent CAPs)`)
       if (chokepoint)
         rationale.push('Chokepoint — losing this CAP would split the friendly network')
+      if (radioChokepoint)
+        rationale.push('Radio chokepoint — losing this CAP severs allies from HQ')
+      if (radioIsolated)
+        rationale.push('Off the radio network — cannot spawn or resupply; consider abandoning')
+      else if (radioConnected)
+        rationale.push('On the HQ radio network — active spawn/supply node')
       if (notesBias > 0.15)
         rationale.push(`Field notes rate this area positively (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
       else if (notesBias < -0.15)
@@ -265,7 +292,7 @@ export function scoreCandidates(
       return {
         cap,
         totalScore,
-        factors: { enemyPressure, contestedCentrality, overextensionPenalty: overextension, movementFeasibility, notesBias, underAttackUrgency, attackingPressure, supplyProximity, chokepoint },
+        factors: { enemyPressure, contestedCentrality, overextensionPenalty: overextension, movementFeasibility, notesBias, underAttackUrgency, attackingPressure, supplyProximity, chokepoint, radioConnected, radioIsolated, radioChokepoint },
         rationale,
       }
     })
@@ -292,6 +319,12 @@ export interface AttackScoredCAP {
     supplyProximity: number
     /** 1 if this enemy CAP is a cut vertex in the enemy subgraph — capturing severs their network. */
     chokepoint: number
+    /** 1 if this enemy CAP is a cut vertex in the enemy radio subgraph specifically. */
+    enemyRadioChokepoint: number
+    /** 1 if this enemy CAP is offline (not in the enemy HQ-rooted radio network). */
+    enemyOffline: number
+    /** 1 if no friendly *online* CAP borders this target (player has no projection). */
+    noProjection: number
   }
 }
 
@@ -314,6 +347,12 @@ export function scoreAttackCandidates(
   // Enemy chokepoints — capturing one severs their network.
   const enemySet = buildEnemyHoldSet(caps, ownership, enemy)
   const enemyChokepoints = findArticulationPoints(caps, enemySet)
+
+  // Radio-network analyses for both factions.
+  const myRadio = analyzeRadioNetwork(caps, ownershipState, playerTeam)
+  const enemyRadio = analyzeRadioNetwork(caps, ownershipState, enemy)
+  const myRadioActive = myRadio.hqValid || myRadio.onlineSet.size >= 2
+  const enemyRadioActive = enemyRadio.hqValid || enemyRadio.onlineSet.size >= 2
 
   const scored = caps
     .filter((cap) => {
@@ -355,6 +394,16 @@ export function scoreAttackCandidates(
       // Capturing a cut vertex in the enemy subgraph severs their chain — high strategic value.
       const chokepoint = enemyChokepoints.has(cap.id) ? 1 : 0
 
+      // Radio-network factors
+      const enemyRadioChokepoint = enemyRadioActive && enemyRadio.cutVertices.has(cap.id) ? 1 : 0
+      const enemyOffline = enemyRadioActive && !enemyRadio.onlineSet.has(cap.id) ? 1 : 0
+      // Soft penalty when the player has a network but no online CAP borders this target.
+      const noProjection =
+        myRadioActive &&
+        !cap.neighbors.some((n) => myRadio.onlineSet.has(n))
+          ? 1
+          : 0
+
       const totalScore =
         friendlySupport  * config.friendlySupportWeight +
         isolation        * config.isolationWeight +
@@ -364,7 +413,10 @@ export function scoreAttackCandidates(
         momentum         * config.momentumWeight +
         reliefValue      * config.reliefWeight +
         supplyProximity  * config.supplyProximityWeight +
-        chokepoint       * config.chokepointWeight
+        chokepoint       * config.chokepointWeight +
+        enemyRadioChokepoint * config.enemyRadioChokepointWeight +
+        enemyOffline     * config.enemyOfflineWeight -
+        noProjection     * config.noProjectionPenalty
 
       const rationale: string[] = []
       if (friendlyNeighbors > 0)
@@ -391,8 +443,14 @@ export function scoreAttackCandidates(
         rationale.push('Near supply depot(s) — capturing grants resupply access')
       if (chokepoint)
         rationale.push('Enemy chokepoint — capturing severs their network chain')
+      if (enemyRadioChokepoint)
+        rationale.push('Enemy radio chokepoint — capturing severs their HQ chain')
+      if (enemyOffline)
+        rationale.push('Enemy CAP is offline — no spawn/resupply; soft target')
+      if (noProjection)
+        rationale.push('No friendly online CAP adjacent — limited assault projection')
 
-      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity, chokepoint } }
+      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity, chokepoint, enemyRadioChokepoint, enemyOffline, noProjection } }
     })
 
   return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)

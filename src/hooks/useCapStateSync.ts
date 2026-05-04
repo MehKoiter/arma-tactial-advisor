@@ -26,6 +26,7 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
         under_attack: next === state.playerTeam ? state.underAttack.has(action.capId) : false,
         attacking: next === enemy ? state.attacking.has(action.capId) : false,
         radio: state.radio.has(action.capId),
+        is_hq: state.hq.has(action.capId),
       })
       break
     }
@@ -38,6 +39,7 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
         under_attack: false,
         attacking: false,
         radio: false,
+        is_hq: false,
       }))
       await supabase.from('cap_ownership').upsert(rows, { onConflict: 'room_id,cap_id' })
       break
@@ -54,6 +56,23 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
     case 'TOGGLE_RADIO':
       await upsertCap(roomId, action.capId, { radio: !state.radio.has(action.capId) })
       break
+
+    case 'TOGGLE_HQ': {
+      const turningOn = !state.hq.has(action.capId)
+      const owner = state.ownership[action.capId] ?? 'neutral'
+      // Mirror the reducer's same-faction enforcement: when designating a new
+      // HQ, clear is_hq on any other CAP currently owned by the same faction.
+      if (turningOn && owner !== 'neutral') {
+        const others = everonCAPs
+          .filter((c) => c.id !== action.capId && state.hq.has(c.id) && (state.ownership[c.id] ?? 'neutral') === owner)
+          .map((c) => ({ room_id: roomId, cap_id: c.id, is_hq: false }))
+        if (others.length) {
+          await supabase.from('cap_ownership').upsert(others, { onConflict: 'room_id,cap_id' })
+        }
+      }
+      await upsertCap(roomId, action.capId, { is_hq: turningOn })
+      break
+    }
   }
 }
 

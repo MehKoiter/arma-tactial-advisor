@@ -8,6 +8,7 @@ export interface CapStateRow {
   under_attack: boolean
   attacking: boolean
   radio: boolean
+  is_hq: boolean
 }
 
 export interface OwnershipState {
@@ -25,6 +26,8 @@ export interface OwnershipState {
   attacking: ReadonlySet<string>
   /** CAP IDs that currently have an active radio antenna (network node) */
   radio: ReadonlySet<string>
+  /** CAP IDs designated as HQ. Constrained to at most one per owner-faction. */
+  hq: ReadonlySet<string>
 }
 
 export type OwnershipAction =
@@ -38,6 +41,7 @@ export type OwnershipAction =
   | { type: 'TOGGLE_UNDER_ATTACK'; capId: string }
   | { type: 'TOGGLE_ATTACKING'; capId: string }
   | { type: 'TOGGLE_RADIO'; capId: string }
+  | { type: 'TOGGLE_HQ'; capId: string }
   | { type: 'HYDRATE'; rows: CapStateRow[] }
   | { type: 'SET_ROW'; row: CapStateRow }
 
@@ -80,6 +84,7 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
         underAttack: new Set(),
         attacking: new Set(),
         radio: new Set(),
+        hq: new Set(),
       }
 
     case 'SET_LAV_POSITION':
@@ -115,48 +120,73 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       return { ...state, radio: r }
     }
 
+    case 'TOGGLE_HQ': {
+      const hq = new Set(state.hq)
+      if (hq.has(action.capId)) {
+        hq.delete(action.capId)
+      } else {
+        // Enforce one HQ per owner-faction: clear any existing HQ owned by the
+        // same faction as the CAP being designated.
+        const newOwner = state.ownership[action.capId] ?? 'neutral'
+        if (newOwner !== 'neutral') {
+          for (const existing of hq) {
+            if ((state.ownership[existing] ?? 'neutral') === newOwner) hq.delete(existing)
+          }
+        }
+        hq.add(action.capId)
+      }
+      return { ...state, hq }
+    }
+
     case 'HYDRATE': {
       const ownership = { ...state.ownership }
       const ua = new Set<string>()
       const atk = new Set<string>()
       const r = new Set<string>()
+      const hq = new Set<string>()
       for (const row of action.rows) {
         ownership[row.cap_id] = row.owner
         if (row.under_attack) ua.add(row.cap_id)
         if (row.attacking) atk.add(row.cap_id)
         if (row.radio) r.add(row.cap_id)
+        if (row.is_hq) hq.add(row.cap_id)
       }
-      return { ...state, ownership, underAttack: ua, attacking: atk, radio: r }
+      return { ...state, ownership, underAttack: ua, attacking: atk, radio: r, hq }
     }
 
     case 'SET_ROW': {
-      const { cap_id, owner, under_attack, attacking, radio } = action.row
+      const { cap_id, owner, under_attack, attacking, radio, is_hq } = action.row
       const currentOwner = state.ownership[cap_id] ?? 'neutral'
       const currentUA = state.underAttack.has(cap_id)
       const currentAtk = state.attacking.has(cap_id)
       const currentRadio = state.radio.has(cap_id)
+      const currentHq = state.hq.has(cap_id)
       // Bail-out: skip re-render if nothing actually changed (prevents
       // self-broadcast loops from realtime triggering redundant renders)
       if (
         currentOwner === owner &&
         currentUA === under_attack &&
         currentAtk === attacking &&
-        currentRadio === radio
+        currentRadio === radio &&
+        currentHq === is_hq
       ) {
         return state
       }
       const ua = new Set(state.underAttack)
       const atk = new Set(state.attacking)
       const r = new Set(state.radio)
+      const hq = new Set(state.hq)
       if (under_attack) ua.add(cap_id); else ua.delete(cap_id)
       if (attacking) atk.add(cap_id); else atk.delete(cap_id)
       if (radio) r.add(cap_id); else r.delete(cap_id)
+      if (is_hq) hq.add(cap_id); else hq.delete(cap_id)
       return {
         ...state,
         ownership: { ...state.ownership, [cap_id]: owner },
         underAttack: ua,
         attacking: atk,
         radio: r,
+        hq,
       }
     }
 
@@ -174,5 +204,6 @@ export function buildInitialOwnership(capIds: string[]): OwnershipState {
     underAttack: new Set(),
     attacking: new Set(),
     radio: new Set(),
+    hq: new Set(),
   }
 }

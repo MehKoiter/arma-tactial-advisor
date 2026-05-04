@@ -43,6 +43,21 @@ export interface ScoringConfig {
    * losing them would sever the network. (Reforger-style chokepoint defence.)
    */
   chokepointWeight: number
+  /**
+   * Bonus for friendly CAPs that are part of the HQ-connected radio network.
+   * Reflects the fact that connected bases can spawn troops & receive supply.
+   */
+  radioConnectedWeight: number
+  /**
+   * Penalty for friendly CAPs that are NOT connected to the HQ radio network.
+   * Soft signal — isolated bases are functionally compromised.
+   */
+  radioIsolatedPenalty: number
+  /**
+   * Bonus for friendly CAPs that are cut vertices specifically in the radio
+   * subgraph — losing them disconnects part of the chain from HQ.
+   */
+  radioChokepointWeight: number
   /** How many top recommendations to return */
   topN: number
 }
@@ -60,7 +75,10 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   supplyProximityWeight: 1.5,
   supplyProximityRadiusMetres: 1500,
   chokepointWeight: 3.5,          // strong signal — cut vertices are critical
-  topN: 5,
+  radioConnectedWeight: 2.0,      // online bases are worth defending
+  radioIsolatedPenalty: 2.5,      // isolated bases are write-offs
+  radioChokepointWeight: 4.5,     // sharper than topology — the Reforger sever
+  topN: 3,                        // condensed list — quality over quantity
 }
 
 /**
@@ -102,6 +120,21 @@ export interface AttackScoringConfig {
    * (Reforger-style chain-cut play.)
    */
   chokepointWeight: number
+  /**
+   * Bonus for capturing an enemy radio cut vertex — severs their HQ chain.
+   * Sharper than the topology-only chokepoint.
+   */
+  enemyRadioChokepointWeight: number
+  /**
+   * Bonus for attacking enemy CAPs that are offline (not connected to enemy HQ).
+   * Easy marks — they can't reinforce or spawn troops.
+   */
+  enemyOfflineWeight: number
+  /**
+   * Penalty when no friendly *online* CAP borders this target. We can't
+   * sustain an assault without a connected staging base nearby.
+   */
+  noProjectionPenalty: number
   /** How many top attack recommendations to return */
   topN: number
 }
@@ -121,7 +154,10 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 1500,
   chokepointWeight: 3.0,
-  topN: 5,
+  enemyRadioChokepointWeight: 4.5, // headline play — sever the enemy chain
+  enemyOfflineWeight: 2.5,         // offline bases are easy captures
+  noProjectionPenalty: 2.0,        // soft — still listed, just downranked
+  topN: 3,                         // condensed list
 }
 
 // ---------------------------------------------------------------------------

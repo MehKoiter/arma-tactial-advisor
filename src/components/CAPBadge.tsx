@@ -20,15 +20,17 @@ interface CAPBadgeProps {
   isEnemy: boolean
   isAttacking: boolean
   hasRadio: boolean
+  isHQ: boolean
   onCycle: () => void
   onSetOwner: (owner: Owner) => void
   onSetLav: () => void
   onToggleAttack: () => void
   onToggleAttacking: () => void
   onToggleRadio: () => void
+  onToggleHQ: () => void
 }
 
-export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, hasRadio, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking, onToggleRadio }: CAPBadgeProps) {
+export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, hasRadio, isHQ, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking, onToggleRadio, onToggleHQ }: CAPBadgeProps) {
   return (
     <div className={`${styles.badge} ${styles[owner]} ${isLavPosition ? styles.lavActive : ''}`}>
       <button
@@ -79,6 +81,17 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
       >
         📡
       </button>
+      {(isFriendly || isEnemy) && (
+        <button
+          type="button"
+          className={`${styles.hqBtn} ${isHQ ? styles.hqActive : ''}`}
+          onClick={onToggleHQ}
+          title={isHQ ? `HQ for ${owner} — click to clear` : `Designate ${name} as ${owner} HQ`}
+          aria-label={isHQ ? `${name}: HQ. Click to clear.` : `Designate ${name} as HQ`}
+        >
+          ★
+        </button>
+      )}
       <button
         type="button"
         className={styles.lavBtn}
