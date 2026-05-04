@@ -5,8 +5,8 @@
   padding: 12px;
   background: var(--bg-panel);
   border-left: 1px solid var(--border-panel);
-  width: 240px;
-  min-width: 200px;
+  width: 100%;
+  min-width: 0;
   overflow-y: auto;
   height: 100%;
 }

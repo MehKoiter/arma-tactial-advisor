@@ -1,10 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TacticalMap } from './components/TacticalMap'
 import { OwnershipPanel } from './components/OwnershipPanel'
 import { RecommendationPanel } from './components/RecommendationPanel'
 import { useOwnership } from './state/OwnershipContext'
 import type { VehicleType } from './state/ownershipReducer'
 import './App.css'
+
+const REC_WIDTH_KEY = 'lav-rec-panel-width'
+const REC_COLLAPSED_KEY = 'lav-rec-panel-collapsed'
+const MIN_WIDTH = 160
+const MAX_WIDTH = 600
+const DEFAULT_WIDTH = 240
 
 const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }[]> = {
   US: [
@@ -22,6 +28,42 @@ const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }
 function App() {
   const { state, dispatch } = useOwnership()
   const { playerTeam, vehicleType } = state
+
+  const [panelWidth, setPanelWidth] = useState<number>(() => {
+    const saved = localStorage.getItem(REC_WIDTH_KEY)
+    return saved ? Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Number(saved))) : DEFAULT_WIDTH
+  })
+  const [collapsed, setCollapsed] = useState<boolean>(() =>
+    localStorage.getItem(REC_COLLAPSED_KEY) === 'true'
+  )
+  const panelWidthRef = useRef(panelWidth)
+  panelWidthRef.current = panelWidth
+
+  function startResize(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = panelWidthRef.current
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+
+    function onMove(ev: PointerEvent) {
+      const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth + startX - ev.clientX))
+      setPanelWidth(next)
+      localStorage.setItem(REC_WIDTH_KEY, String(next))
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
+  function toggleCollapse() {
+    setCollapsed((v) => {
+      localStorage.setItem(REC_COLLAPSED_KEY, String(!v))
+      return !v
+    })
+  }
 
   useEffect(() => {
     document.documentElement.dataset.team = playerTeam
@@ -52,7 +94,22 @@ function App() {
       <main className="app-main">
         <OwnershipPanel />
         <TacticalMap />
-        <RecommendationPanel />
+        <div className="rec-resize-handle" onPointerDown={startResize}>
+          <button
+            className="rec-collapse-btn"
+            onClick={toggleCollapse}
+            title={collapsed ? 'Expand recommendations' : 'Collapse recommendations'}
+            aria-label={collapsed ? 'Expand' : 'Collapse'}
+          >
+            {collapsed ? '◀' : '▶'}
+          </button>
+        </div>
+        <div
+          className="rec-panel-wrapper"
+          style={{ width: collapsed ? 0 : panelWidth }}
+        >
+          <RecommendationPanel />
+        </div>
       </main>
     </div>
   )
