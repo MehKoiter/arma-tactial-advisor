@@ -280,6 +280,29 @@ export function TacticalMap() {
     return { attackProjectionGeoJSON: linesFC, attackableEnemiesGeoJSON: haloFC }
   }, [state, mobs, hoveredAnchorId])
 
+  // 3 km radio-range circle around the hovered CAP/MOB. Always drawn (even
+  // for neutral CAPs) so the user sees the reach at a glance.
+  const hoveredAnchorRangeGeoJSON = useMemo(() => {
+    if (!hoveredAnchorId) return { type: 'FeatureCollection' as const, features: [] }
+    let lng: number | null = null
+    let lat: number | null = null
+    let faction: 'US' | 'RUS' | 'neutral' = 'neutral'
+    if (hoveredAnchorId.startsWith('MOB_')) {
+      const f = hoveredAnchorId.slice(4) as 'US' | 'RUS'
+      const m = mobs[f]
+      if (m) { lng = m.lng; lat = m.lat; faction = f }
+    } else {
+      const cap = everonCAPs.find((c) => c.id === hoveredAnchorId)
+      if (cap) { lng = cap.coords.lng; lat = cap.coords.lat; faction = state.ownership[cap.id] ?? 'neutral' }
+    }
+    if (lng == null || lat == null) return { type: 'FeatureCollection' as const, features: [] }
+    const fc = makeCircleGeoJSON(lng, lat, 3000)
+    return {
+      ...fc,
+      features: fc.features.map((f) => ({ ...f, properties: { faction } })),
+    }
+  }, [hoveredAnchorId, mobs, state.ownership])
+
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
   // heatmap-radius uses exponential zoom interpolation to keep the blob a fixed geographic size (~300 m).
@@ -391,6 +414,41 @@ export function TacticalMap() {
                 'line-opacity': 0.8,
               }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+          </Source>
+        )}
+
+        {hoveredAnchorRangeGeoJSON.features.length > 0 && (
+          <Source id="hovered-anchor-range" type="geojson" data={hoveredAnchorRangeGeoJSON}>
+            <Layer
+              id="hovered-anchor-range-fill"
+              type="fill"
+              paint={{
+                'fill-color': [
+                  'match',
+                  ['get', 'faction'],
+                  'US', '#42a5f5',
+                  'RUS', '#ef5350',
+                  '#90a4ae',
+                ] as ExpressionSpecification,
+                'fill-opacity': 0.06,
+              }}
+            />
+            <Layer
+              id="hovered-anchor-range-outline"
+              type="line"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'faction'],
+                  'US', '#64b5f6',
+                  'RUS', '#ef5350',
+                  '#b0bec5',
+                ] as ExpressionSpecification,
+                'line-width': 1,
+                'line-opacity': 0.6,
+                'line-dasharray': [4, 3],
+              }}
             />
           </Source>
         )}
