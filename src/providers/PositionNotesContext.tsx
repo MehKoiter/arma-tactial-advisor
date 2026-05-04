@@ -4,6 +4,7 @@ import type { PositionNote, Rating } from '@/data/positionNotes'
 
 interface PositionNotesContextValue {
   notes: PositionNote[]
+  loaded: boolean
   addNote: (lng: number, lat: number, rating: Rating, capId: string) => void
   removeNote: (uid: string) => void
   clearNotes: () => void

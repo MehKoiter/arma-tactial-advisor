@@ -3,5 +3,7 @@ dist
 coverage
 *.local
 .DS_Store
+.env
+.env.*
 # Generated map tiles — run `npm run generate-tiles` to rebuild locally
 public/tiles/
