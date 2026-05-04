@@ -2,7 +2,7 @@ import type { CAPDataset } from './capSchema'
 import { gameToCoords } from './mapConfig'
 
 /**
- * Everon (Arma Reforger) Control Area Points — all 20 locations.
+ * Everon (Arma Reforger) Control Area Points — all 26 locations.
  *
  * Coordinates sourced from EnfusionMapMaker (nickludlam/EnfusionMapMaker on GitHub),
  * extracted directly from Workbench game-world transforms (metres, X/Z axes).
@@ -36,7 +36,7 @@ const everonCAPs: CAPDataset = [
     'west'),
 
   cap('CAP_CHOTAIN',      'Chotain',     'CHO', 'major',  7444.065,  6697.595,
-    ['CAP_ANDRES_BEACON', 'CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LEVIE', 'CAP_QUARRY'],
+    ['CAP_ANDRES_BEACON', 'CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LEVIE', 'CAP_QUARRY', 'CAP_ENTRE_DEUX', 'CAP_LARUNS'],
     'central'),
 
   cap('CAP_ST_PIERRE',    'St Pierre',   'STP', 'major',  9689.432,  1558.166,
@@ -49,43 +49,43 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_POWER_PLANT',  'Power Plant', 'PWR', 'minor',  5826.642,  9786.735,
-    ['CAP_AIRPORT', 'CAP_TYRONE', 'CAP_ANDRES_BEACON'],
+    ['CAP_AIRPORT', 'CAP_TYRONE', 'CAP_ANDRES_BEACON', 'CAP_KERMOVAN'],
     'north'),
 
   cap('CAP_MEAUX',        'Meaux',       'MEX', 'minor',  4517.52,   9467.668,
-    ['CAP_AIRPORT', 'CAP_ST_PHILLIPE', 'CAP_TYRONE', 'CAP_GRAVETTE'],
+    ['CAP_AIRPORT', 'CAP_ST_PHILLIPE', 'CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_MILITARY_HOSPITAL'],
     'north'),
 
   cap('CAP_TYRONE',       'Tyrone',      'TYR', 'minor',  4948.837,  9075.68,
-    ['CAP_ST_PHILLIPE', 'CAP_MEAUX', 'CAP_POWER_PLANT', 'CAP_ANDRES_BEACON', 'CAP_GRAVETTE', 'CAP_MONTIGNAC'],
+    ['CAP_ST_PHILLIPE', 'CAP_MEAUX', 'CAP_POWER_PLANT', 'CAP_ANDRES_BEACON', 'CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_KERMOVAN', 'CAP_MILITARY_HOSPITAL'],
     'north'),
 
   cap('CAP_ANDRES_BEACON','Andres Beacon','AND', 'minor',  6843.832,  8191.218,
-    ['CAP_POWER_PLANT', 'CAP_TYRONE', 'CAP_CHOTAIN', 'CAP_LEVIE'],
+    ['CAP_POWER_PLANT', 'CAP_TYRONE', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_KERMOVAN'],
     'north'),
 
   cap('CAP_GRAVETTE',     'Gravette',    'GRV', 'minor',  4128.282,  7792.364,
-    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE'],
+    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MILITARY_HOSPITAL'],
     'central'),
 
   cap('CAP_MONTIGNAC',    'Montignac',   'MON', 'minor',  4775.641,  7086.945,
-    ['CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_CHOTAIN'],
+    ['CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_CHOTAIN', 'CAP_ENTRE_DEUX'],
     'central'),
 
   cap('CAP_VILLENEUVE',   'Villeneuve',  'VIL', 'minor',  2847.008,  6339.848,
-    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS'],
+    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS', 'CAP_OLD_WOOD'],
     'central'),
 
   cap('CAP_PROVINS',      'Provins',     'PRV', 'minor',  5488.17,   6083.411,
-    ['CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_FIGARI', 'CAP_CHOTAIN', 'CAP_MORTON'],
+    ['CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_FIGARI', 'CAP_CHOTAIN', 'CAP_MORTON', 'CAP_ENTRE_DEUX', 'CAP_MORTON_VALLEY'],
     'central'),
 
   cap('CAP_FIGARI',       'Figari',      'FIG', 'minor',  5256.366,  5341.263,
-    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_MORTON'],
+    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_MORTON', 'CAP_MORTON_VALLEY'],
     'central'),
 
   cap('CAP_LEVIE',        'Levie',       'LEV', 'minor',  7476.739,  4301.884,
-    ['CAP_ANDRES_BEACON', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_QUARRY'],
+    ['CAP_ANDRES_BEACON', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_QUARRY', 'CAP_LARUNS'],
     'east'),
 
   cap('CAP_QUARRY',       'Quarry',      'QRY', 'minor',  8786.965,  3913.078,
@@ -93,7 +93,7 @@ const everonCAPs: CAPDataset = [
     'east'),
 
   cap('CAP_MORTON',       'Morton',      'MRT', 'minor',  4956.796,  3875.627,
-    ['CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LAMENTIN', 'CAP_CAMURAC'],
+    ['CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LAMENTIN', 'CAP_CAMURAC', 'CAP_OLD_WOOD', 'CAP_MORTON_VALLEY'],
     'south'),
 
   cap('CAP_CAMURAC',      'Camurac',     'CAM', 'minor',  6594.162,  3116.684,
@@ -107,6 +107,31 @@ const everonCAPs: CAPDataset = [
   cap('CAP_DURRAS',       'Durras',      'DUR', 'minor',  8826.12,   2746.123,
     ['CAP_QUARRY', 'CAP_REGINA', 'CAP_ST_PIERRE'],
     'south'),
+
+  // ── MISSING CAPs (sourced from EnfusionMapMaker everon-locations.js) ────────
+  cap('CAP_ENTRE_DEUX',   'Entre Deux',      'EDT', 'minor',  5760.571,  7061.821,
+    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN'],
+    'central'),
+
+  cap('CAP_KERMOVAN',     'Kermovan',        'KER', 'minor',  6359.376,  9668.684,
+    ['CAP_POWER_PLANT', 'CAP_ANDRES_BEACON', 'CAP_TYRONE'],
+    'north'),
+
+  cap('CAP_MILITARY_HOSPITAL', 'Military Hospital', 'HSP', 'minor', 3904.698, 8450.042,
+    ['CAP_GRAVETTE', 'CAP_TYRONE', 'CAP_MEAUX'],
+    'north'),
+
+  cap('CAP_OLD_WOOD',     'Old Wood',        'OWD', 'minor',  3293.234,  4488.741,
+    ['CAP_VILLENEUVE', 'CAP_MORTON', 'CAP_MORTON_VALLEY'],
+    'west'),
+
+  cap('CAP_MORTON_VALLEY','Morton Valley',   'MVL', 'minor',  4517.589,  4967.065,
+    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_OLD_WOOD', 'CAP_PROVINS'],
+    'central'),
+
+  cap('CAP_LARUNS',       'Laruns',          'LAR', 'minor',  7429.288,  5318.843,
+    ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI'],
+    'east'),
 ]
 
 export default everonCAPs
