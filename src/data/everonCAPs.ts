@@ -65,15 +65,15 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_GRAVETTE',     'Gravette',    'GRV', 'minor',  4128.282,  7792.364,
-    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MILITARY_HOSPITAL', 'CAP_HORNBEAM_VALLEY'],
+    ['CAP_MEAUX', 'CAP_TYRONE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MILITARY_HOSPITAL', 'CAP_HORNBEAM_VALLEY', 'CAP_PINEWOOD_LAKE'],
     'central'),
 
   cap('CAP_MONTIGNAC',    'Montignac',   'MON', 'minor',  4775.641,  7086.945,
-    ['CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_CHOTAIN', 'CAP_ENTRE_DEUX'],
+    ['CAP_TYRONE', 'CAP_GRAVETTE', 'CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_CHOTAIN', 'CAP_ENTRE_DEUX', 'CAP_PINEWOOD_LAKE'],
     'central'),
 
   cap('CAP_VILLENEUVE',   'Villeneuve',  'VIL', 'minor',  2847.008,  6339.848,
-    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS', 'CAP_OLD_WOOD', 'CAP_CALVARY_HILL', 'CAP_LE_MOULE'],
+    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_LAMENTIN', 'CAP_PROVINS', 'CAP_OLD_WOOD', 'CAP_CALVARY_HILL', 'CAP_LE_MOULE', 'CAP_PINEWOOD_LAKE'],
     'central'),
 
   cap('CAP_PROVINS',      'Provins',     'PRV', 'minor',  5488.17,   6083.411,
@@ -126,7 +126,7 @@ const everonCAPs: CAPDataset = [
     'west'),
 
   cap('CAP_MORTON_VALLEY','Morton Valley',   'MVL', 'minor',  4517.589,  4967.065,
-    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_OLD_WOOD', 'CAP_PROVINS', 'CAP_CALVARY_HILL'],
+    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_OLD_WOOD', 'CAP_PROVINS', 'CAP_CALVARY_HILL', 'CAP_PINEWOOD_LAKE'],
     'central'),
 
   cap('CAP_LARUNS',       'Laruns',          'LAR', 'minor',  7429.288,  5318.843,
@@ -144,6 +144,10 @@ const everonCAPs: CAPDataset = [
   cap('CAP_LE_MOULE',     'Le Moule',        'LMO', 'minor',  2400,      5400,
     ['CAP_LAMENTIN', 'CAP_VILLENEUVE', 'CAP_CALVARY_HILL', 'CAP_OLD_WOOD'],
     'west'),
+
+  cap('CAP_PINEWOOD_LAKE', 'Pinewood Lake',  'PWL', 'minor',  4400,      6100,
+    ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MORTON_VALLEY'],
+    'central'),
 ]
 
 export default everonCAPs
