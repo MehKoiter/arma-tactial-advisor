@@ -19,8 +19,7 @@ import type { MobFaction } from '@/data/mobs'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
-import { computeRadioLinks, computeMobRadioLinks, computeAttackProjectionLines } from '@/data/radioConfig'
-import { analyzeRadioNetwork } from '@/scoring/radioNetwork'
+import { computeRadioLinks, computeMobRadioLinks } from '@/data/radioConfig'
 import { MapContextMenu } from './MapContextMenu'
 import styles from './TacticalMap.module.css'
 
@@ -213,22 +212,49 @@ export function TacticalMap() {
     }
   }, [state.ownership, state.radio, mobs, hoveredAnchorId])
 
-  // Attack-projection lines: from each friendly online CAP/MOB to enemy CAPs in radio range.
+  // Attack-projection lines: from the hovered friendly anchor (CAP or MOB) to
+  // every enemy CAP in radio range. Visualises that anchor's individual reach,
+  // independent of player team or whose anchor is "nearest" globally.
   const { attackProjectionGeoJSON, attackableEnemiesGeoJSON } = useMemo(() => {
-    const playerTeam = state.playerTeam
-    const myMob = mobs[playerTeam] ? { lng: mobs[playerTeam]!.lng, lat: mobs[playerTeam]!.lat } : null
-    const myRadio = analyzeRadioNetwork(everonCAPs, state, playerTeam, undefined, myMob)
-    const allLines = computeAttackProjectionLines(
-      everonCAPs,
-      state.ownership,
-      playerTeam,
-      myRadio.onlineSet,
-      myMob,
-    )
-    // Only show projection lines/halos involving the hovered CAP/MOB.
-    const lines = hoveredAnchorId
-      ? allLines.filter((l) => l.fromId === hoveredAnchorId || l.toId === hoveredAnchorId)
-      : []
+    type Line = { fromLng: number; fromLat: number; toLng: number; toLat: number; toId: string; attacker: 'US' | 'RUS'; distanceM: number }
+    const lines: Line[] = []
+    if (hoveredAnchorId) {
+      let anchorFaction: 'US' | 'RUS' | null = null
+      let anchorLng = 0
+      let anchorLat = 0
+      if (hoveredAnchorId.startsWith('MOB_')) {
+        const f = hoveredAnchorId.slice(4) as 'US' | 'RUS'
+        const m = mobs[f]
+        if (m) { anchorFaction = f; anchorLng = m.lng; anchorLat = m.lat }
+      } else {
+        const cap = everonCAPs.find((c) => c.id === hoveredAnchorId)
+        const owner = cap ? state.ownership[cap.id] ?? 'neutral' : 'neutral'
+        if (cap && (owner === 'US' || owner === 'RUS') && state.radio.has(cap.id)) {
+          anchorFaction = owner
+          anchorLng = cap.coords.lng
+          anchorLat = cap.coords.lat
+        }
+      }
+      if (anchorFaction) {
+        const enemyFaction: 'US' | 'RUS' = anchorFaction === 'US' ? 'RUS' : 'US'
+        for (const e of everonCAPs) {
+          if ((state.ownership[e.id] ?? 'neutral') !== enemyFaction) continue
+          const dx = (e.coords.lng - anchorLng) * METRES_PER_DEGREE
+          const dy = (e.coords.lat - anchorLat) * METRES_PER_DEGREE
+          const d = Math.hypot(dx, dy)
+          if (d > 3000) continue
+          lines.push({
+            fromLng: anchorLng,
+            fromLat: anchorLat,
+            toLng: e.coords.lng,
+            toLat: e.coords.lat,
+            toId: e.id,
+            attacker: anchorFaction,
+            distanceM: d,
+          })
+        }
+      }
+    }
     const linesFC = {
       type: 'FeatureCollection' as const,
       features: lines.map((l) => ({
