@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useMemo, type ReactNode } from 'react'
 import { ownershipReducer, buildInitialOwnership } from './ownershipReducer'
 import type { OwnershipState, OwnershipAction } from './ownershipReducer'
+import { useCapStateSync } from '@/hooks/useCapStateSync'
 import everonCAPs from '@/data/everonCAPs'
 
 interface OwnershipContextValue {
@@ -12,8 +13,9 @@ const OwnershipContext = createContext<OwnershipContextValue | null>(null)
 
 export function OwnershipProvider({ children }: { children: ReactNode }) {
   const initial = useMemo(() => buildInitialOwnership(everonCAPs.map((c) => c.id)), [])
-  const [state, dispatch] = useReducer(ownershipReducer, initial)
-  const value = useMemo(() => ({ state, dispatch }), [state])
+  const [state, rawDispatch] = useReducer(ownershipReducer, initial)
+  const dispatch = useCapStateSync(state, rawDispatch)
+  const value = useMemo(() => ({ state, dispatch }), [state, dispatch])
   return <OwnershipContext value={value}>{children}</OwnershipContext>
 }
 

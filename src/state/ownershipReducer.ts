@@ -2,6 +2,13 @@ export type Owner = 'neutral' | 'US' | 'RUS'
 export type PlayerTeam = 'US' | 'RUS'
 export type VehicleType = 'LAV' | 'ATTACK_HELO' | 'TRANSPORT_HELO'
 
+export interface CapStateRow {
+  cap_id: string
+  owner: Owner
+  under_attack: boolean
+  attacking: boolean
+}
+
 export interface OwnershipState {
   /** Map from CAP ID → current owner */
   ownership: Record<string, Owner>
@@ -27,8 +34,10 @@ export type OwnershipAction =
   | { type: 'SET_VEHICLE_TYPE'; vehicleType: VehicleType }
   | { type: 'TOGGLE_UNDER_ATTACK'; capId: string }
   | { type: 'TOGGLE_ATTACKING'; capId: string }
+  | { type: 'HYDRATE'; rows: CapStateRow[] }
+  | { type: 'SET_ROW'; row: CapStateRow }
 
-function cycleOwner(current: Owner): Owner {
+export function cycleOwner(current: Owner): Owner {
   if (current === 'neutral') return 'US'
   if (current === 'US') return 'RUS'
   return 'US'
@@ -92,6 +101,32 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       if (atk.has(action.capId)) atk.delete(action.capId)
       else atk.add(action.capId)
       return { ...state, attacking: atk }
+    }
+
+    case 'HYDRATE': {
+      const ownership = { ...state.ownership }
+      const ua = new Set<string>()
+      const atk = new Set<string>()
+      for (const row of action.rows) {
+        ownership[row.cap_id] = row.owner
+        if (row.under_attack) ua.add(row.cap_id)
+        if (row.attacking) atk.add(row.cap_id)
+      }
+      return { ...state, ownership, underAttack: ua, attacking: atk }
+    }
+
+    case 'SET_ROW': {
+      const { cap_id, owner, under_attack, attacking } = action.row
+      const ua = new Set(state.underAttack)
+      const atk = new Set(state.attacking)
+      if (under_attack) ua.add(cap_id); else ua.delete(cap_id)
+      if (attacking) atk.add(cap_id); else atk.delete(cap_id)
+      return {
+        ...state,
+        ownership: { ...state.ownership, [cap_id]: owner },
+        underAttack: ua,
+        attacking: atk,
+      }
     }
 
     default:
