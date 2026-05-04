@@ -123,29 +123,25 @@ def main() -> None:
                 src_x0, src_x1 = lng_to_px(t_lng0), lng_to_px(t_lng1)
                 src_y0, src_y1 = lat_to_py(t_lat1), lat_to_py(t_lat0)   # lat1>lat0 so y0<y1
 
-                # Clamp to image bounds
-                cx0 = max(0.0, src_x0);  cx1 = min(float(img_w), src_x1)
-                cy0 = max(0.0, src_y0);  cy1 = min(float(img_h), src_y1)
+                # Skip tiles entirely outside the source image
+                if src_x1 <= 0 or src_x0 >= img_w or src_y1 <= 0 or src_y0 >= img_h:
+                    out_dir = OUTPUT_DIR / str(z) / str(tx)
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    Image.new("RGB", (TILE_SIZE, TILE_SIZE), BG_COLOR).save(
+                        out_dir / f"{ty}.jpg", "JPEG", quality=JPEG_QUALITY
+                    )
+                    continue
 
-                tile = Image.new("RGB", (TILE_SIZE, TILE_SIZE), BG_COLOR)
-
-                if cx1 > cx0 and cy1 > cy0:
-                    crop = img.crop((int(cx0), int(cy0), int(cx1), int(cy1)))
-
-                    # Scale factor: full tile spans (src_x1-src_x0) source pixels
-                    tile_src_w = src_x1 - src_x0
-                    tile_src_h = src_y1 - src_y0
-                    sx = TILE_SIZE / tile_src_w if tile_src_w > 0 else 1.0
-                    sy = TILE_SIZE / tile_src_h if tile_src_h > 0 else 1.0
-
-                    new_w = max(1, int(round(crop.width  * sx)))
-                    new_h = max(1, int(round(crop.height * sy)))
-                    crop_scaled = crop.resize((new_w, new_h), Image.LANCZOS)
-
-                    # Paste position within the 256×256 tile
-                    paste_x = int(round((cx0 - src_x0) * sx))
-                    paste_y = int(round((cy0 - src_y0) * sy))
-                    tile.paste(crop_scaled, (paste_x, paste_y))
+                # Use Image.transform with EXTENT for sub-pixel-accurate sampling.
+                # This eliminates the integer-truncation gaps that cause visible
+                # seams between adjacent tiles.
+                tile = img.transform(
+                    (TILE_SIZE, TILE_SIZE),
+                    Image.EXTENT,
+                    (src_x0, src_y0, src_x1, src_y1),
+                    Image.BICUBIC,
+                    fillcolor=BG_COLOR,
+                )
 
                 out_dir = OUTPUT_DIR / str(z) / str(tx)
                 out_dir.mkdir(parents=True, exist_ok=True)
