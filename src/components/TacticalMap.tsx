@@ -209,7 +209,7 @@ export function TacticalMap() {
   }, [state.ownership, state.radio, mobs])
 
   // Attack-projection lines: from each friendly online CAP/MOB to enemy CAPs in radio range.
-  const attackProjectionGeoJSON = useMemo(() => {
+  const { attackProjectionGeoJSON, attackableEnemiesGeoJSON } = useMemo(() => {
     const playerTeam = state.playerTeam
     const myMob = mobs[playerTeam] ? { lng: mobs[playerTeam]!.lng, lat: mobs[playerTeam]!.lat } : null
     const myRadio = analyzeRadioNetwork(everonCAPs, state, playerTeam, undefined, myMob)
@@ -220,7 +220,7 @@ export function TacticalMap() {
       myRadio.onlineSet,
       myMob,
     )
-    return {
+    const linesFC = {
       type: 'FeatureCollection' as const,
       features: lines.map((l) => ({
         type: 'Feature' as const,
@@ -234,6 +234,15 @@ export function TacticalMap() {
         properties: { attacker: l.attacker, distanceM: Math.round(l.distanceM) },
       })),
     }
+    const haloFC = {
+      type: 'FeatureCollection' as const,
+      features: lines.map((l) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [l.toLng, l.toLat] },
+        properties: { attacker: l.attacker, capId: l.toId },
+      })),
+    }
+    return { attackProjectionGeoJSON: linesFC, attackableEnemiesGeoJSON: haloFC }
   }, [state, mobs])
 
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
@@ -394,7 +403,25 @@ export function TacticalMap() {
 
         {attackProjectionGeoJSON.features.length > 0 && (
           <Source id="attack-projection" type="geojson" data={attackProjectionGeoJSON}>
-            {/* Color is the *enemy* faction colour — what we project ONTO. */}
+            {/* Outer glow */}
+            <Layer
+              id="attack-projection-glow"
+              type="line"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'attacker'],
+                  'US', '#ff5252',
+                  'RUS', '#42a5f5',
+                  '#ff5252',
+                ] as ExpressionSpecification,
+                'line-width': 8,
+                'line-opacity': 0.25,
+                'line-blur': 4,
+              }}
+              layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+            {/* Bold dashed core — reach lines */}
             <Layer
               id="attack-projection-line"
               type="line"
@@ -402,15 +429,55 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'attacker'],
-                  'US', '#ef5350',   // US player → red lines onto RUS targets
-                  'RUS', '#64b5f6',  // RUS player → blue lines onto US targets
-                  '#ef5350',
+                  'US', '#ff5252',
+                  'RUS', '#42a5f5',
+                  '#ff5252',
                 ] as ExpressionSpecification,
-                'line-width': 1.4,
-                'line-opacity': 0.7,
-                'line-dasharray': [1, 3],
+                'line-width': 2.5,
+                'line-opacity': 0.95,
+                'line-dasharray': [3, 2],
               }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+          </Source>
+        )}
+
+        {attackableEnemiesGeoJSON.features.length > 0 && (
+          <Source id="attack-projection-halos" type="geojson" data={attackableEnemiesGeoJSON}>
+            {/* Pulsing halo around each attackable enemy CAP */}
+            <Layer
+              id="attack-projection-halo-outer"
+              type="circle"
+              paint={{
+                'circle-radius': 22,
+                'circle-color': 'transparent',
+                'circle-stroke-color': [
+                  'match',
+                  ['get', 'attacker'],
+                  'US', '#ff5252',
+                  'RUS', '#42a5f5',
+                  '#ff5252',
+                ] as ExpressionSpecification,
+                'circle-stroke-width': 2,
+                'circle-stroke-opacity': 0.85,
+              }}
+            />
+            <Layer
+              id="attack-projection-halo-inner"
+              type="circle"
+              paint={{
+                'circle-radius': 14,
+                'circle-color': 'transparent',
+                'circle-stroke-color': [
+                  'match',
+                  ['get', 'attacker'],
+                  'US', '#ff5252',
+                  'RUS', '#42a5f5',
+                  '#ff5252',
+                ] as ExpressionSpecification,
+                'circle-stroke-width': 1,
+                'circle-stroke-opacity': 0.5,
+              }}
             />
           </Source>
         )}

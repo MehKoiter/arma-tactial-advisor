@@ -140,6 +140,9 @@ export interface AttackProjectionLine {
  * from every friendly online anchor (CAP id in `onlineSet`, plus optional MOB)
  * to every enemy-owned CAP within radio range. These visualize where the
  * attacker can sustain an assault by radio coverage.
+ *
+ * Only the *nearest* friendly anchor is returned per attackable enemy CAP, so
+ * the visualisation stays readable instead of producing an N\u00d7M mesh.
  */
 export function computeAttackProjectionLines(
   caps: ReadonlyArray<CAP>,
@@ -163,22 +166,25 @@ export function computeAttackProjectionLines(
 
   const out: AttackProjectionLine[] = []
   for (const e of enemies) {
+    let best: { anchor: typeof anchors[number]; d: number } | null = null
     for (const a of anchors) {
       const dx = (e.coords.lng - a.lng) * METRES_PER_DEGREE
       const dy = (e.coords.lat - a.lat) * METRES_PER_DEGREE
       const d = Math.hypot(dx, dy)
       if (d > rangeM) continue
-      out.push({
-        fromId: a.id,
-        toId: e.id,
-        fromLng: a.lng,
-        fromLat: a.lat,
-        toLng: e.coords.lng,
-        toLat: e.coords.lat,
-        attacker,
-        distanceM: d,
-      })
+      if (!best || d < best.d) best = { anchor: a, d }
     }
+    if (!best) continue
+    out.push({
+      fromId: best.anchor.id,
+      toId: e.id,
+      fromLng: best.anchor.lng,
+      fromLat: best.anchor.lat,
+      toLng: e.coords.lng,
+      toLat: e.coords.lat,
+      attacker,
+      distanceM: best.d,
+    })
   }
   return out
 }
