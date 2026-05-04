@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import MapGL, { Source, Layer, Marker, NavigationControl } from 'react-map-gl/maplibre'
 import type { ExpressionSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -7,12 +7,12 @@ import { useRouting } from '@/routing/RoutingContext'
 import everonCAPs from '@/data/everonCAPs'
 import { MAP_INITIAL_VIEW, MAP_BOUNDS, TILE_SOURCE, METRES_PER_DEGREE } from '@/data/mapConfig'
 import { INDICATOR_BY_ID } from '@/data/indicators'
-import type { PlacedIndicator } from '@/data/indicators'
 import type { Rating } from '@/data/positionNotes'
 import { RATING_COLORS, RATING_LABELS } from '@/data/positionNotes'
 import { RANGEFINDER_RINGS_BY_VEHICLE } from '@/scoring/scoringConfig'
 import type { RouteResult } from '@/routing/routingProvider'
 import { usePositionNotesContext } from '@/providers/PositionNotesContext'
+import { useIndicatorsContext } from '@/providers/IndicatorsContext'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
@@ -80,10 +80,9 @@ export function TacticalMap() {
   const [rangefinderActive, setRangefinderActive] = useState(false)
   const [rangefinderLocked, setRangefinderLocked] = useState(false)
   const [rangefinderCenter, setRangefinderCenter] = useState<{ lng: number; lat: number } | null>(null)
-  const [indicators, setIndicators] = useState<PlacedIndicator[]>([])
+  const { indicators, addIndicator, removeIndicator } = useIndicatorsContext()
   const [showNotesHeatmap, setShowNotesHeatmap] = useState(true)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lng: number; lat: number } | null>(null)
-  const uidRef = useRef(0)
 
   const handleMapClick = useCallback((e: { lngLat: { lng: number; lat: number } }) => {
     setContextMenu(null)
@@ -101,15 +100,12 @@ export function TacticalMap() {
 
   const handlePlaceIndicator = useCallback((typeId: string) => {
     if (!contextMenu) return
-    setIndicators((prev) => [
-      ...prev,
-      { uid: String(++uidRef.current), typeId, lng: contextMenu.lng, lat: contextMenu.lat },
-    ])
-  }, [contextMenu])
+    addIndicator(typeId, contextMenu.lng, contextMenu.lat)
+  }, [contextMenu, addIndicator])
 
   const handleRemoveIndicator = useCallback((uid: string) => {
-    setIndicators((prev) => prev.filter((i) => i.uid !== uid))
-  }, [])
+    removeIndicator(uid)
+  }, [removeIndicator])
 
   const handleRatePosition = useCallback((rating: Rating) => {
     if (!contextMenu || !selectedSuggestion) return
