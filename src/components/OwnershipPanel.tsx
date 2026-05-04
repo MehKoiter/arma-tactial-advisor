@@ -77,6 +77,7 @@ export function OwnershipPanel() {
                     isEnemy={owner === enemyTeam}
                     isAttacking={state.attacking.has(cap.id)}
                     onCycle={() => dispatch({ type: 'CYCLE_OWNER', capId: cap.id })}
+                    onSetOwner={(o) => dispatch({ type: 'SET_OWNER', capId: cap.id, owner: o })}
                     onSetLav={() =>
                       dispatch({
                         type: 'SET_LAV_POSITION',

@@ -20,20 +20,28 @@ interface CAPBadgeProps {
   isEnemy: boolean
   isAttacking: boolean
   onCycle: () => void
+  onSetOwner: (owner: Owner) => void
   onSetLav: () => void
   onToggleAttack: () => void
   onToggleAttacking: () => void
 }
 
-export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, onCycle, onSetLav, onToggleAttack, onToggleAttacking }: CAPBadgeProps) {
+export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking }: CAPBadgeProps) {
   return (
     <div className={`${styles.badge} ${styles[owner]} ${isLavPosition ? styles.lavActive : ''}`}>
       <button
         type="button"
         className={styles.ownerBtn}
-        onClick={onCycle}
-        title={`Cycle ownership (current: ${owner})`}
-        aria-label={`${name} ownership: ${owner}. Click to cycle.`}
+        onClick={(e) => {
+          if (e.shiftKey) { onCycle(); return }
+          onSetOwner(owner === 'US' ? 'neutral' : 'US')
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          onSetOwner(owner === 'RUS' ? 'neutral' : 'RUS')
+        }}
+        title={`Left-click: US ↔ Neutral · Right-click: RUS ↔ Neutral · Shift+Click: cycle (current: ${owner})`}
+        aria-label={`${name} ownership: ${owner}. Left-click for US, right-click for RUS.`}
       >
         {OWNER_LABELS[owner]}
       </button>
