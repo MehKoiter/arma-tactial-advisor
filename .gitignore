@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+*.local
+.DS_Store
+# Generated map tiles — run `npm run generate-tiles` to rebuild locally
+public/tiles/

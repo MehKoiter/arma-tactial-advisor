@@ -1,0 +1,208 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border-panel);
+  width: 240px;
+  min-width: 200px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-panel);
+  padding-bottom: 6px;
+}
+
+.tab {
+  flex: 1;
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #888;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.tab:hover {
+  background: #252535;
+  color: #bbb;
+}
+
+.tabActive {
+  background: var(--accent-dim, rgba(30,60,100,0.92));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hint, .empty {
+  font-size: 0.72rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  gap: 8px;
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.rank {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--accent);
+  min-width: 24px;
+  padding-top: 1px;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.capName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.score {
+  font-size: 0.7rem;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.scoreAttack {
+  color: #ef5350;
+}
+
+.itemAttack {
+  border-color: rgba(239, 83, 80, 0.25);
+}
+
+.rankAttack {
+  color: #ef5350;
+}
+
+.rationale {
+  margin: 0;
+  padding: 0 0 0 12px;
+  font-size: 0.68rem;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* ── Indicator Key ───────────────────────────────────────────────────────────── */
+.indicatorKey {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #2a2a3a;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.indicatorKeyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.indicatorKeyTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  margin: 0;
+}
+
+.supplyToggle {
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a2e;
+  color: #888;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.supplyToggle:hover {
+  border-color: #ffa726;
+  color: #ffa726;
+}
+
+.supplyToggleActive {
+  border-color: #ffa726;
+  color: #ffa726;
+  background: rgba(255, 167, 38, 0.12);
+}
+
+.indicatorKeyCat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.indicatorKeyCatLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(180, 180, 200, 0.45);
+  margin-bottom: 1px;
+}
+
+.indicatorKeyRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #ccc;
+}
+
+.indicatorKeyIcon {
+  font-size: 0.9rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.indicatorKeyLabel {
+  color: var(--ind-color, #ccc);
+  font-size: 0.7rem;
+}
