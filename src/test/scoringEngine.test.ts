@@ -43,21 +43,26 @@ describe('calcEnemyPressure', () => {
 })
 
 describe('calcContestedCentrality', () => {
-  it('returns 2 when two neighbors are contested', () => {
+  it('returns 1.0 when both neighbors are enemy or neutral', () => {
     // CAPS[1] is B, whose neighbors are A and C
     const own = { A: 'RUS', B: 'neutral', C: 'RUS', D: 'neutral' }
-    expect(calcContestedCentrality(CAPS[1], own as never, 'RUS')).toBe(2)
+    expect(calcContestedCentrality(CAPS[1], own as never, 'RUS')).toBe(1)
+  })
+
+  it('returns 0.5 when half the neighbors are friendly', () => {
+    const own = { A: 'US', B: 'neutral', C: 'RUS', D: 'neutral' }
+    expect(calcContestedCentrality(CAPS[1], own as never, 'RUS')).toBe(0.5)
   })
 })
 
 describe('calcOverextension', () => {
-  it('flags overextension when all neighbors are enemy', () => {
+  it('returns 1 when all neighbors are enemy', () => {
     // CAPS[1] is B, whose neighbors are A and C
     const own = { A: 'RUS', B: 'neutral', C: 'RUS' }
     expect(calcOverextension(CAPS[1], own as never, 'RUS')).toBe(1)
   })
 
-  it('does not flag when only some neighbors are enemy', () => {
+  it('returns 0 when fewer than half the neighbors are enemy', () => {
     const own = { A: 'US', B: 'neutral', C: 'RUS' }
     expect(calcOverextension(CAPS[1], own as never, 'RUS')).toBe(0)
   })
@@ -122,7 +127,7 @@ describe('scoreCandidates', () => {
 
   it('ranks higher-pressure CAPs above low-pressure ones', () => {
     // A has 1 enemy neighbor (B); D has 0 enemy neighbors
-    const state = makeOwnership({ A: 'friendly', B: 'enemy', C: 'neutral', D: 'friendly' })
+    const state = makeOwnership({ A: 'US', B: 'RUS', C: 'neutral', D: 'US' })
     const results = scoreCandidates(CAPS, state, DEFAULT_SCORING_CONFIG)
     const rankA = results.findIndex((r) => r.cap.id === 'A')
     const rankD = results.findIndex((r) => r.cap.id === 'D')

@@ -44,8 +44,8 @@ export interface ScoringConfig {
 
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   enemyPressureWeight: 3.0,
-  contestedCentralityWeight: 2.0,
-  overextensionPenalty: 0.5,
+  contestedCentralityWeight: 2.5, // ratio [0,1]; weight tuned up since values are smaller
+  overextensionPenalty: 3.0,      // graded [0,1]; meaningful penalty when deep in enemy territory
   movementFeasibilityWeight: 1.5,
   maxFeasibleHops: 3,
   notesBiasWeight: 2.0,
@@ -103,7 +103,9 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   majorBaseBonus: 1.5,
   notesBiasWeight: 2.0,
   notesSearchRadiusMetres: 500,
-  momentumWeight: 3.0,
+  // Soft tiebreaker for player-flagged targets, not a runaway boost.
+  momentumWeight: 1.0,
+  // Capped at 1.0 in the engine, so this is the ceiling, not multiplied per ally.
   reliefWeight: 2.5,
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 1500,

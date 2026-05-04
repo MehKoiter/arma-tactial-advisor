@@ -33,7 +33,7 @@ export interface ScoredCAP {
 // Individual factor functions
 // ---------------------------------------------------------------------------
 
-/** Enemy pressure: friendly/neutral CAPs adjacent to enemy-owned neighbors */
+/** Enemy pressure: count of enemy-owned neighbours of a friendly/neutral CAP. */
 export function calcEnemyPressure(cap: CAP, ownership: Record<string, Owner>, enemy: PlayerTeam): number {
   const own = ownership[cap.id] ?? 'neutral'
   if (own === enemy) return 0
@@ -41,20 +41,32 @@ export function calcEnemyPressure(cap: CAP, ownership: Record<string, Owner>, en
   return enemyNeighbors
 }
 
-/** Contested centrality: how many enemy neighbors surround a neutral/friendly CAP */
+/**
+ * Contested centrality: ratio of frontline-adjacent neighbours (enemy or neutral)
+ * to total neighbours. Range [0, 1]. Distinct from raw enemy-pressure: a CAP
+ * surrounded by neutrals (no friendly support) scores high here even with no enemy contact.
+ */
 export function calcContestedCentrality(cap: CAP, ownership: Record<string, Owner>, enemy: PlayerTeam): number {
   const own = ownership[cap.id] ?? 'neutral'
   if (own === enemy) return 0
-  const hotNeighbors = cap.neighbors.filter((n) => ownership[n] === enemy).length
-  return hotNeighbors
+  if (!cap.neighbors.length) return 0
+  const frontline = cap.neighbors.filter((n) => {
+    const o = ownership[n] ?? 'neutral'
+    return o === enemy || o === 'neutral'
+  }).length
+  return frontline / cap.neighbors.length
 }
 
-/** Overextension: CAP is deep in enemy territory (75%+ neighbors are enemy) */
+/**
+ * Overextension: graded penalty for friendlies cut off behind enemy lines.
+ * Returns 0 if <50% of neighbours are enemy, scaling linearly to 1 at 100% enemy.
+ */
 export function calcOverextension(cap: CAP, ownership: Record<string, Owner>, enemy: PlayerTeam): number {
   if (!cap.neighbors.length) return 0
   const enemyRatio =
     cap.neighbors.filter((n) => ownership[n] === enemy).length / cap.neighbors.length
-  return enemyRatio >= 0.75 ? 1 : 0
+  if (enemyRatio < 0.5) return 0
+  return (enemyRatio - 0.5) * 2 // 0.5 → 0, 1.0 → 1.0
 }
 
 /** BFS hop distance from lavPosition. Returns Infinity if unreachable. */
@@ -182,13 +194,15 @@ export function scoreCandidates(
 
       const rationale: string[] = []
       if (enemyPressure > 0)
-        rationale.push(`${enemyPressure} enemy-adjacent neighbor(s) — high pressure zone`)
-      if (contestedCentrality > 0)
-        rationale.push(`${contestedCentrality} contested/enemy neighbor(s) — central to front`)
-      if (overextension)
-        rationale.push('Surrounded by enemy — overextension risk')
+        rationale.push(`${enemyPressure} adjacent enemy CAP(s) — high pressure zone`)
+      if (contestedCentrality > 0.5)
+        rationale.push('Mostly bordered by neutral / enemy CAPs — frontline position')
+      if (overextension > 0)
+        rationale.push(overextension >= 1
+          ? 'Surrounded by enemy — overextension risk'
+          : 'Mostly surrounded by enemy — overextension risk')
       if (movementFeasibility > 0)
-        rationale.push(`Reachable from current LAV position (within ${config.maxFeasibleHops} hops)`)
+        rationale.push(`Reachable from current LAV position via the CAP graph (≤ ${config.maxFeasibleHops} adjacent CAPs)`)
       if (notesBias > 0.15)
         rationale.push(`Field notes rate this area positively (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
       else if (notesBias < -0.15)
@@ -280,7 +294,9 @@ export function scoreAttackCandidates(
       const relievedNeighbors = cap.neighbors.filter(
         (n) => (ownership[n] ?? 'neutral') === playerTeam && underAttack.has(n)
       ).length
-      const reliefValue = relievedNeighbors
+      // Cap relief at 1.0 so a single bordering ally under attack saturates;
+      // additional ones provide diminishing returns rather than runaway score.
+      const reliefValue = Math.min(relievedNeighbors, 1)
 
       const totalScore =
         friendlySupport  * config.friendlySupportWeight +
@@ -300,7 +316,7 @@ export function scoreAttackCandidates(
       else if (isolation < 0.3)
         rationale.push('Heavy enemy reinforcement risk — coordinate carefully')
       if (movementFeasibility > 0)
-        rationale.push(`LAV can reach within ${config.maxFeasibleHops} hops`)
+        rationale.push(`LAV can reach via ≤ ${config.maxFeasibleHops} adjacent CAPs`)
       if (majorBonus)
         rationale.push('Major base — high strategic value')
       if (notesBias > 0.15)
@@ -308,9 +324,11 @@ export function scoreAttackCandidates(
       else if (notesBias < -0.15)
         rationale.push(`Poor nearby firing positions (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
       if (momentum)
-        rationale.push('⚔ Assault already in progress — maintain momentum')
-      if (reliefValue > 0)
-        rationale.push(`Capturing this relieves pressure on ${reliefValue} friendly CAP(s) under attack`)
+        rationale.push('Flagged as active assault target — player intent')
+      if (relievedNeighbors > 0)
+        rationale.push(relievedNeighbors === 1
+          ? 'Capturing this relieves pressure on a friendly CAP under attack'
+          : `Capturing this relieves pressure on ${relievedNeighbors} friendly CAPs under attack`)
       if (supplyProximity > 0.1)
         rationale.push('Near supply depot(s) — capturing grants resupply access')
 
