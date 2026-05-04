@@ -13,7 +13,8 @@ function randomSlug(): string {
 export function Landing() {
   const [creating, setCreating] = useState(false)
   const [createPin, setCreatePin] = useState('')
-  const [createBmId, setCreateBmId] = useState('')
+  const [createBmUs, setCreateBmUs] = useState('')
+  const [createBmRus, setCreateBmRus] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
 
   const [joinSlug, setJoinSlug] = useState('')
@@ -29,10 +30,15 @@ export function Landing() {
       for (let attempt = 0; attempt < 5; attempt++) {
         const slug = randomSlug()
         const pin = createPin.trim() || null
-        const bmRaw = createBmId.trim()
-        const bmMatch = bmRaw ? bmRaw.match(/(\d{4,})/) : null
-        const battlemetrics_id = bmMatch ? bmMatch[1] : null
-        const { error } = await supabase.from('rooms').insert({ slug, pin, battlemetrics_id })
+        const parseBm = (raw: string) => {
+          const t = raw.trim()
+          if (!t) return null
+          const m = t.match(/(\d{4,})/)
+          return m ? m[1] : null
+        }
+        const battlemetrics_us_id = parseBm(createBmUs)
+        const battlemetrics_rus_id = parseBm(createBmRus)
+        const { error } = await supabase.from('rooms').insert({ slug, pin, battlemetrics_us_id, battlemetrics_rus_id })
         if (!error) {
           if (pin) setStoredPin(slug, pin)
           setSlugInUrl(slug)
@@ -104,9 +110,20 @@ export function Landing() {
             BattleMetrics server (optional)
             <input
               type="text"
-              value={createBmId}
-              onChange={(e) => setCreateBmId(e.target.value)}
-              placeholder="ID or URL — e.g. 36444485"
+              value={createBmUs}
+              onChange={(e) => setCreateBmUs(e.target.value)}
+              placeholder="🇺🇸 US server — ID or URL"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+          </label>
+          <label>
+            
+            <input
+              type="text"
+              value={createBmRus}
+              onChange={(e) => setCreateBmRus(e.target.value)}
+              placeholder="🇷🇺 RUS server — ID or URL"
               autoCapitalize="none"
               autoCorrect="off"
             />

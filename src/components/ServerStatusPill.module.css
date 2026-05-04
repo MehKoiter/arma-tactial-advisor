@@ -16,6 +16,11 @@
   gap: 4px;
 }
 
+.flag {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
 .dot {
   width: 8px;
   height: 8px;

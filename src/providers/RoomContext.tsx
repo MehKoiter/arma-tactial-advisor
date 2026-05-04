@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 
+export type ServerFaction = 'US' | 'RUS'
+
 interface RoomContextValue {
   slug: string
-  battlemetricsId: string | null
-  setBattlemetricsId: (id: string | null) => Promise<void>
+  battlemetricsUsId: string | null
+  battlemetricsRusId: string | null
+  setBattlemetricsId: (faction: ServerFaction, id: string | null) => Promise<void>
   leave: () => void
 }
 
@@ -40,36 +43,37 @@ export function setSlugInUrl(slug: string | null) {
 
 export function RoomProvider({ children }: { children: (slug: string | null) => ReactNode }) {
   const [slug, setSlug] = useState<string | null>(() => readSlugFromUrl())
-  const [battlemetricsId, setBattlemetricsIdState] = useState<string | null>(null)
+  const [usId, setUsId] = useState<string | null>(null)
+  const [rusId, setRusId] = useState<string | null>(null)
 
-  // React to back/forward + our own pushState dispatch
   useEffect(() => {
     function onPop() { setSlug(readSlugFromUrl()) }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  // Load battlemetrics_id when slug changes
+  // Load IDs when slug changes
   useEffect(() => {
-    if (!slug) { setBattlemetricsIdState(null); return }
+    if (!slug) { setUsId(null); setRusId(null); return }
     let cancelled = false
     void supabase
       .from('rooms')
-      .select('battlemetrics_id')
+      .select('battlemetrics_us_id, battlemetrics_rus_id')
       .eq('slug', slug)
       .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) {
-          console.warn('[RoomContext] load battlemetrics_id failed:', error.message)
+          console.warn('[RoomContext] load battlemetrics ids failed:', error.message)
           return
         }
-        setBattlemetricsIdState((data?.battlemetrics_id as string | null) ?? null)
+        setUsId((data?.battlemetrics_us_id as string | null) ?? null)
+        setRusId((data?.battlemetrics_rus_id as string | null) ?? null)
       })
     return () => { cancelled = true }
   }, [slug])
 
-  // Listen for changes on the rooms row so multiple clients see edits
+  // Realtime: pick up edits from other clients
   useEffect(() => {
     if (!slug) return
     const channel = supabase
@@ -78,15 +82,16 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `slug=eq.${slug}` },
         (payload) => {
-          const next = (payload.new as { battlemetrics_id?: string | null }).battlemetrics_id ?? null
-          setBattlemetricsIdState(next)
+          const row = payload.new as { battlemetrics_us_id?: string | null; battlemetrics_rus_id?: string | null }
+          setUsId(row.battlemetrics_us_id ?? null)
+          setRusId(row.battlemetrics_rus_id ?? null)
         },
       )
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [slug])
 
-  // Touch last_active_at so this room is kept alive
+  // Keep room alive
   useEffect(() => {
     if (!slug) return
     const touch = () => {
@@ -101,20 +106,21 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
     if (!slug) return null
     return {
       slug,
-      battlemetricsId,
-      setBattlemetricsId: async (id: string | null) => {
+      battlemetricsUsId: usId,
+      battlemetricsRusId: rusId,
+      setBattlemetricsId: async (faction: ServerFaction, id: string | null) => {
         const trimmed = id && id.trim() ? id.trim() : null
-        // Optimistic
-        setBattlemetricsIdState(trimmed)
+        const column = faction === 'US' ? 'battlemetrics_us_id' : 'battlemetrics_rus_id'
+        if (faction === 'US') setUsId(trimmed); else setRusId(trimmed)
         const { error } = await supabase
           .from('rooms')
-          .update({ battlemetrics_id: trimmed })
+          .update({ [column]: trimmed })
           .eq('slug', slug)
-        if (error) console.warn('[RoomContext] save battlemetrics_id failed:', error.message)
+        if (error) console.warn('[RoomContext] save', column, 'failed:', error.message)
       },
       leave: () => setSlugInUrl(null),
     }
-  }, [slug, battlemetricsId])
+  }, [slug, usId, rusId])
 
   return (
     <RoomContext value={value}>
