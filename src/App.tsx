@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { TacticalMap } from './components/TacticalMap'
 import { OwnershipPanel } from './components/OwnershipPanel'
 import { RecommendationPanel } from './components/RecommendationPanel'
+import { ServerStatusPill } from './components/ServerStatusPill'
 import { useOwnership } from './state/OwnershipContext'
 import { useRoom } from './providers/RoomContext'
 import type { VehicleType } from './state/ownershipReducer'
@@ -89,6 +90,7 @@ function App() {
           </button>
           <button className="room-pill-leave" onClick={leaveRoom} title="Leave room">×</button>
         </span>
+        <ServerStatusPill />
         <button
           className={`team-toggle team-toggle--${playerTeam.toLowerCase()}`}
           onClick={() => dispatch({ type: 'SET_PLAYER_TEAM', team: playerTeam === 'US' ? 'RUS' : 'US' })}

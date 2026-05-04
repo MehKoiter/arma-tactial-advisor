@@ -13,6 +13,7 @@ function randomSlug(): string {
 export function Landing() {
   const [creating, setCreating] = useState(false)
   const [createPin, setCreatePin] = useState('')
+  const [createBmId, setCreateBmId] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
 
   const [joinSlug, setJoinSlug] = useState('')
@@ -28,7 +29,10 @@ export function Landing() {
       for (let attempt = 0; attempt < 5; attempt++) {
         const slug = randomSlug()
         const pin = createPin.trim() || null
-        const { error } = await supabase.from('rooms').insert({ slug, pin })
+        const bmRaw = createBmId.trim()
+        const bmMatch = bmRaw ? bmRaw.match(/(\d{4,})/) : null
+        const battlemetrics_id = bmMatch ? bmMatch[1] : null
+        const { error } = await supabase.from('rooms').insert({ slug, pin, battlemetrics_id })
         if (!error) {
           if (pin) setStoredPin(slug, pin)
           setSlugInUrl(slug)
@@ -94,6 +98,17 @@ export function Landing() {
               value={createPin}
               onChange={(e) => setCreatePin(e.target.value.replace(/\D/g, ''))}
               placeholder="e.g. 1234"
+            />
+          </label>
+          <label>
+            BattleMetrics server (optional)
+            <input
+              type="text"
+              value={createBmId}
+              onChange={(e) => setCreateBmId(e.target.value)}
+              placeholder="ID or URL — e.g. 36444485"
+              autoCapitalize="none"
+              autoCorrect="off"
             />
           </label>
           {createError && <p className={styles.error}>{createError}</p>}

@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 
 interface RoomContextValue {
   slug: string
+  battlemetricsId: string | null
+  setBattlemetricsId: (id: string | null) => Promise<void>
   leave: () => void
 }
 
@@ -38,6 +40,7 @@ export function setSlugInUrl(slug: string | null) {
 
 export function RoomProvider({ children }: { children: (slug: string | null) => ReactNode }) {
   const [slug, setSlug] = useState<string | null>(() => readSlugFromUrl())
+  const [battlemetricsId, setBattlemetricsIdState] = useState<string | null>(null)
 
   // React to back/forward + our own pushState dispatch
   useEffect(() => {
@@ -45,6 +48,43 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+
+  // Load battlemetrics_id when slug changes
+  useEffect(() => {
+    if (!slug) { setBattlemetricsIdState(null); return }
+    let cancelled = false
+    void supabase
+      .from('rooms')
+      .select('battlemetrics_id')
+      .eq('slug', slug)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.warn('[RoomContext] load battlemetrics_id failed:', error.message)
+          return
+        }
+        setBattlemetricsIdState((data?.battlemetrics_id as string | null) ?? null)
+      })
+    return () => { cancelled = true }
+  }, [slug])
+
+  // Listen for changes on the rooms row so multiple clients see edits
+  useEffect(() => {
+    if (!slug) return
+    const channel = supabase
+      .channel(`rooms_changes_${slug}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `slug=eq.${slug}` },
+        (payload) => {
+          const next = (payload.new as { battlemetrics_id?: string | null }).battlemetrics_id ?? null
+          setBattlemetricsIdState(next)
+        },
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [slug])
 
   // Touch last_active_at so this room is kept alive
   useEffect(() => {
@@ -61,9 +101,20 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
     if (!slug) return null
     return {
       slug,
+      battlemetricsId,
+      setBattlemetricsId: async (id: string | null) => {
+        const trimmed = id && id.trim() ? id.trim() : null
+        // Optimistic
+        setBattlemetricsIdState(trimmed)
+        const { error } = await supabase
+          .from('rooms')
+          .update({ battlemetrics_id: trimmed })
+          .eq('slug', slug)
+        if (error) console.warn('[RoomContext] save battlemetrics_id failed:', error.message)
+      },
       leave: () => setSlugInUrl(null),
     }
-  }, [slug])
+  }, [slug, battlemetricsId])
 
   return (
     <RoomContext value={value}>
