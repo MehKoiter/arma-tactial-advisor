@@ -6,7 +6,7 @@ import everonCAPs from '@/data/everonCAPs'
 
 async function upsertCap(capId: string, patch: Partial<Omit<CapStateRow, 'cap_id'>>) {
   await supabase
-    .from('cap_state')
+    .from('cap_ownership')
     .upsert({ cap_id: capId, ...patch }, { onConflict: 'cap_id' })
 }
 
@@ -35,7 +35,7 @@ async function syncAction(action: OwnershipAction, state: OwnershipState) {
         under_attack: false,
         attacking: false,
       }))
-      await supabase.from('cap_state').upsert(rows, { onConflict: 'cap_id' })
+      await supabase.from('cap_ownership').upsert(rows, { onConflict: 'cap_id' })
       break
     }
 
@@ -64,7 +64,7 @@ export function useCapStateSync(
   // Initial fetch — load whatever is already in the DB
   useEffect(() => {
     supabase
-      .from('cap_state')
+      .from('cap_ownership')
       .select('*')
       .then(({ data }) => {
         if (data?.length) dispatch({ type: 'HYDRATE', rows: data as CapStateRow[] })
@@ -74,10 +74,10 @@ export function useCapStateSync(
   // Realtime subscription — receive changes made by other clients
   useEffect(() => {
     const channel = supabase
-      .channel('cap_state_changes')
+      .channel('cap_ownership_changes')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'cap_state' },
+        { event: '*', schema: 'public', table: 'cap_ownership' },
         (payload) => {
           const row = (payload.new ?? payload.old) as CapStateRow
           if (row?.cap_id) dispatch({ type: 'SET_ROW', row })
