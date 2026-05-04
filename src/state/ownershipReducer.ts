@@ -117,6 +117,14 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
 
     case 'SET_ROW': {
       const { cap_id, owner, under_attack, attacking } = action.row
+      const currentOwner = state.ownership[cap_id] ?? 'neutral'
+      const currentUA = state.underAttack.has(cap_id)
+      const currentAtk = state.attacking.has(cap_id)
+      // Bail-out: skip re-render if nothing actually changed (prevents
+      // self-broadcast loops from realtime triggering redundant renders)
+      if (currentOwner === owner && currentUA === under_attack && currentAtk === attacking) {
+        return state
+      }
       const ua = new Set(state.underAttack)
       const atk = new Set(state.attacking)
       if (under_attack) ua.add(cap_id); else ua.delete(cap_id)

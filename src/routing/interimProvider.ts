@@ -3,17 +3,25 @@ import type { Coordinate, RouteResult, RoutingProvider } from './routingProvider
 /**
  * InterimRoutingProvider — straight-line (as-the-crow-flies) routing.
  * Immediate usability while road-graph data is not available.
+ * Caches results to avoid recomputation on rapid state changes.
  */
 export class InterimRoutingProvider implements RoutingProvider {
   readonly name = 'interim-straight-line'
+  private readonly cache = new Map<string, RouteResult>()
 
   async getRoute(from: Coordinate, to: Coordinate): Promise<RouteResult> {
+    const key = `${from.lng.toFixed(5)},${from.lat.toFixed(5)}|${to.lng.toFixed(5)},${to.lat.toFixed(5)}`
+    const cached = this.cache.get(key)
+    if (cached) return cached
+
     const distanceMetres = haversineMetres(from, to)
-    return {
+    const result: RouteResult = {
       coordinates: [from, to],
       distanceMetres,
       provider: this.name,
     }
+    this.cache.set(key, result)
+    return result
   }
 }
 
