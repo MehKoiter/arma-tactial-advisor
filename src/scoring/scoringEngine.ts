@@ -5,6 +5,7 @@ import type { PositionNote } from '@/data/positionNotes'
 import type { SupplyPoint } from '@/data/everonSupplyPoints'
 import { bfsHopsFiltered, findArticulationPoints } from './graphAnalysis'
 import { analyzeRadioNetwork, type MobAnchor } from './radioNetwork'
+import { RADIO_RANGE_METRES } from '@/data/radioConfig'
 
 // Virtual coordinate system: 1 degree = METRES_PER_DEGREE metres (same as mapConfig)
 const METRES_PER_DEGREE = 111_320
@@ -329,6 +330,8 @@ export interface AttackScoredCAP {
     enemyOffline: number
     /** 1 if no friendly *online* CAP borders this target (player has no projection). */
     noProjection: number
+    /** 1 if no friendly online CAP (or MOB) is within radio range of this target. */
+    outOfRadioRange: number
   }
 }
 
@@ -360,6 +363,15 @@ export function scoreAttackCandidates(
   const enemyRadio = analyzeRadioNetwork(caps, ownershipState, enemy, undefined, enemyMob)
   const myRadioActive = myRadio.hqValid || myRadio.mobAnchored || myRadio.onlineSet.size >= 2
   const enemyRadioActive = enemyRadio.hqValid || enemyRadio.mobAnchored || enemyRadio.onlineSet.size >= 2
+
+  // Pre-resolve coordinates of friendly online CAPs for radio-range tests
+  // against attack targets. The MOB (if placed) is also a valid radio anchor.
+  const onlineCoords: { lng: number; lat: number }[] = []
+  for (const id of myRadio.onlineSet) {
+    const c = caps.find((x) => x.id === id)
+    if (c) onlineCoords.push(c.coords)
+  }
+  if (myMob) onlineCoords.push({ lng: myMob.lng, lat: myMob.lat })
 
   const scored = caps
     .filter((cap) => {
@@ -411,6 +423,19 @@ export function scoreAttackCandidates(
           ? 1
           : 0
 
+      // Soft penalty when the target is outside radio range of every friendly
+      // online CAP/MOB. Captured ground we can't cover by radio is hard to hold.
+      const outOfRadioRange = (() => {
+        if (!myRadioActive) return 0
+        if (onlineCoords.length === 0) return 1
+        for (const oc of onlineCoords) {
+          const dx = (cap.coords.lng - oc.lng) * METRES_PER_DEGREE
+          const dy = (cap.coords.lat - oc.lat) * METRES_PER_DEGREE
+          if (Math.hypot(dx, dy) <= RADIO_RANGE_METRES) return 0
+        }
+        return 1
+      })()
+
       const totalScore =
         friendlySupport  * config.friendlySupportWeight +
         isolation        * config.isolationWeight +
@@ -423,7 +448,8 @@ export function scoreAttackCandidates(
         chokepoint       * config.chokepointWeight +
         enemyRadioChokepoint * config.enemyRadioChokepointWeight +
         enemyOffline     * config.enemyOfflineWeight -
-        noProjection     * config.noProjectionPenalty
+        noProjection     * config.noProjectionPenalty -
+        outOfRadioRange  * config.outOfRadioRangePenalty
 
       const rationale: string[] = []
       if (friendlyNeighbors > 0)
@@ -456,8 +482,10 @@ export function scoreAttackCandidates(
         rationale.push('Enemy CAP is offline — no spawn/resupply; soft target')
       if (noProjection)
         rationale.push('No friendly online CAP adjacent — limited assault projection')
+      if (outOfRadioRange)
+        rationale.push('📡 Out of radio range — no friendly online CAP/MOB can cover this target')
 
-      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity, chokepoint, enemyRadioChokepoint, enemyOffline, noProjection } }
+      return { cap, totalScore, rationale, attackFactors: { friendlySupport, isolation, movementFeasibility, majorBonus, notesBias, momentum, reliefValue, supplyProximity, chokepoint, enemyRadioChokepoint, enemyOffline, noProjection, outOfRadioRange } }
     })
 
   return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)

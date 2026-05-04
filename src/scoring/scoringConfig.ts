@@ -135,6 +135,11 @@ export interface AttackScoringConfig {
    * sustain an assault without a connected staging base nearby.
    */
   noProjectionPenalty: number
+  /**
+   * Penalty when no friendly online CAP (or friendly MOB) is within radio
+   * range of the target. Without coverage, captured ground can't be held.
+   */
+  outOfRadioRangePenalty: number
   /** How many top attack recommendations to return */
   topN: number
 }
@@ -157,6 +162,7 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   enemyRadioChokepointWeight: 4.5, // headline play — sever the enemy chain
   enemyOfflineWeight: 2.5,         // offline bases are easy captures
   noProjectionPenalty: 2.0,        // soft — still listed, just downranked
+  outOfRadioRangePenalty: 3.5,     // soft — stronger than projection, weaker than chokepoint
   topN: 3,                         // condensed list
 }
 

@@ -19,7 +19,8 @@ import type { MobFaction } from '@/data/mobs'
 import { useRecommendation } from '@/providers/RecommendationContext'
 import type { AnyScored } from '@/providers/RecommendationContext'
 import everonSupplyPoints from '@/data/everonSupplyPoints'
-import { computeRadioLinks, computeMobRadioLinks } from '@/data/radioConfig'
+import { computeRadioLinks, computeMobRadioLinks, computeAttackProjectionLines } from '@/data/radioConfig'
+import { analyzeRadioNetwork } from '@/scoring/radioNetwork'
 import { MapContextMenu } from './MapContextMenu'
 import styles from './TacticalMap.module.css'
 
@@ -207,6 +208,34 @@ export function TacticalMap() {
     }
   }, [state.ownership, state.radio, mobs])
 
+  // Attack-projection lines: from each friendly online CAP/MOB to enemy CAPs in radio range.
+  const attackProjectionGeoJSON = useMemo(() => {
+    const playerTeam = state.playerTeam
+    const myMob = mobs[playerTeam] ? { lng: mobs[playerTeam]!.lng, lat: mobs[playerTeam]!.lat } : null
+    const myRadio = analyzeRadioNetwork(everonCAPs, state, playerTeam, undefined, myMob)
+    const lines = computeAttackProjectionLines(
+      everonCAPs,
+      state.ownership,
+      playerTeam,
+      myRadio.onlineSet,
+      myMob,
+    )
+    return {
+      type: 'FeatureCollection' as const,
+      features: lines.map((l) => ({
+        type: 'Feature' as const,
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: [
+            [l.fromLng, l.fromLat],
+            [l.toLng, l.toLat],
+          ],
+        },
+        properties: { attacker: l.attacker, distanceM: Math.round(l.distanceM) },
+      })),
+    }
+  }, [state, mobs])
+
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
   // heatmap-radius uses exponential zoom interpolation to keep the blob a fixed geographic size (~300 m).
@@ -357,6 +386,29 @@ export function TacticalMap() {
                 'line-width': 1.5,
                 'line-opacity': 0.9,
                 'line-dasharray': [2, 2],
+              }}
+              layout={{ 'line-join': 'round', 'line-cap': 'round' }}
+            />
+          </Source>
+        )}
+
+        {attackProjectionGeoJSON.features.length > 0 && (
+          <Source id="attack-projection" type="geojson" data={attackProjectionGeoJSON}>
+            {/* Color is the *enemy* faction colour — what we project ONTO. */}
+            <Layer
+              id="attack-projection-line"
+              type="line"
+              paint={{
+                'line-color': [
+                  'match',
+                  ['get', 'attacker'],
+                  'US', '#ef5350',   // US player → red lines onto RUS targets
+                  'RUS', '#64b5f6',  // RUS player → blue lines onto US targets
+                  '#ef5350',
+                ] as ExpressionSpecification,
+                'line-width': 1.4,
+                'line-opacity': 0.7,
+                'line-dasharray': [1, 3],
               }}
               layout={{ 'line-join': 'round', 'line-cap': 'round' }}
             />

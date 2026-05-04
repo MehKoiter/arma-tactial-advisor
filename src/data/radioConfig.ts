@@ -122,3 +122,63 @@ export function computeMobRadioLinks(
   }
   return out
 }
+
+export interface AttackProjectionLine {
+  fromId: string
+  toId: string
+  fromLng: number
+  fromLat: number
+  toLng: number
+  toLat: number
+  /** Faction projecting the attack (the player's team). */
+  attacker: Exclude<Owner, 'neutral'>
+  distanceM: number
+}
+
+/**
+ * Compute attack-projection lines: for the given attacker faction, draw a line
+ * from every friendly online anchor (CAP id in `onlineSet`, plus optional MOB)
+ * to every enemy-owned CAP within radio range. These visualize where the
+ * attacker can sustain an assault by radio coverage.
+ */
+export function computeAttackProjectionLines(
+  caps: ReadonlyArray<CAP>,
+  ownership: Record<string, Owner>,
+  attacker: Exclude<Owner, 'neutral'>,
+  onlineSet: ReadonlySet<string>,
+  mob: { lng: number; lat: number } | null,
+  rangeM: number = RADIO_RANGE_METRES,
+): AttackProjectionLine[] {
+  const enemyFaction: Exclude<Owner, 'neutral'> = attacker === 'US' ? 'RUS' : 'US'
+  const enemies = caps.filter((c) => (ownership[c.id] ?? 'neutral') === enemyFaction)
+  if (enemies.length === 0) return []
+
+  const anchors: { id: string; lng: number; lat: number }[] = []
+  for (const id of onlineSet) {
+    const c = caps.find((x) => x.id === id)
+    if (c) anchors.push({ id: c.id, lng: c.coords.lng, lat: c.coords.lat })
+  }
+  if (mob) anchors.push({ id: `MOB_${attacker}`, lng: mob.lng, lat: mob.lat })
+  if (anchors.length === 0) return []
+
+  const out: AttackProjectionLine[] = []
+  for (const e of enemies) {
+    for (const a of anchors) {
+      const dx = (e.coords.lng - a.lng) * METRES_PER_DEGREE
+      const dy = (e.coords.lat - a.lat) * METRES_PER_DEGREE
+      const d = Math.hypot(dx, dy)
+      if (d > rangeM) continue
+      out.push({
+        fromId: a.id,
+        toId: e.id,
+        fromLng: a.lng,
+        fromLat: a.lat,
+        toLng: e.coords.lng,
+        toLat: e.coords.lat,
+        attacker,
+        distanceM: d,
+      })
+    }
+  }
+  return out
+}
