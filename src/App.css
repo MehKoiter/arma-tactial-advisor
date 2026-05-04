@@ -88,6 +88,39 @@
   overflow: hidden;
 }
 
+/* ── Room pill (share / leave) ─────────────────────────────────────────────── */
+.room-pill {
+  display: inline-flex;
+  align-items: stretch;
+  background: #1e1e3a;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.room-pill-slug,
+.room-pill-leave {
+  background: transparent;
+  border: none;
+  color: #e0e0e0;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+}
+
+.room-pill-slug strong { color: #66bb6a; font-weight: 600; }
+
+.room-pill-slug:hover { background: #2a2a4a; }
+.room-pill-leave {
+  border-left: 1px solid #2a2a4a;
+  color: #9aa;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+.room-pill-leave:hover { background: #2a1a1a; color: #ef5350; }
+
 /* ── Recommendation panel resize ───────────────────────────────────────────── */
 .rec-panel-wrapper {
   flex-shrink: 0;

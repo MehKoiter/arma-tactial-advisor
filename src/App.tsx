@@ -3,6 +3,7 @@ import { TacticalMap } from './components/TacticalMap'
 import { OwnershipPanel } from './components/OwnershipPanel'
 import { RecommendationPanel } from './components/RecommendationPanel'
 import { useOwnership } from './state/OwnershipContext'
+import { useRoom } from './providers/RoomContext'
 import type { VehicleType } from './state/ownershipReducer'
 import './App.css'
 
@@ -28,6 +29,7 @@ const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }
 function App() {
   const { state, dispatch } = useOwnership()
   const { playerTeam, vehicleType } = state
+  const { slug: roomSlug, leave: leaveRoom } = useRoom()
 
   const [panelWidth, setPanelWidth] = useState<number>(() => {
     const saved = localStorage.getItem(REC_WIDTH_KEY)
@@ -73,6 +75,20 @@ function App() {
     <div className="app-layout">
       <header className="app-header">
         <h1>LAV+ Tactical Advisor � Everon</h1>
+        <span className="room-pill" title="Click to copy share link">
+          <button
+            className="room-pill-slug"
+            onClick={() => {
+              const url = new URL(window.location.href)
+              url.searchParams.set('room', roomSlug)
+              void navigator.clipboard.writeText(url.toString())
+            }}
+            title="Copy share link"
+          >
+            Room: <strong>{roomSlug}</strong>
+          </button>
+          <button className="room-pill-leave" onClick={leaveRoom} title="Leave room">×</button>
+        </span>
         <button
           className={`team-toggle team-toggle--${playerTeam.toLowerCase()}`}
           onClick={() => dispatch({ type: 'SET_PLAYER_TEAM', team: playerTeam === 'US' ? 'RUS' : 'US' })}
