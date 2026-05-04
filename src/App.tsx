@@ -91,8 +91,7 @@ function App() {
           </button>
           <button className="room-pill-leave" onClick={leaveRoom} title="Leave room">×</button>
         </span>
-        <ServerStatusPill faction="US" />
-        <ServerStatusPill faction="RUS" />
+        <ServerStatusPill />
         <button
           className={`team-toggle team-toggle--${playerTeam.toLowerCase()}`}
           onClick={() => dispatch({ type: 'SET_PLAYER_TEAM', team: playerTeam === 'US' ? 'RUS' : 'US' })}
