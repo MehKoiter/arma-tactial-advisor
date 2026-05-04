@@ -27,6 +27,7 @@ function makeOwnership(map: Record<string, string>): OwnershipState {
     vehicleType: 'LAV',
     underAttack: new Set(),
     attacking: new Set(),
+    radio: new Set(),
   }
 }
 

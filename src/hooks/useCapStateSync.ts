@@ -25,6 +25,7 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
         owner: next,
         under_attack: next === state.playerTeam ? state.underAttack.has(action.capId) : false,
         attacking: next === enemy ? state.attacking.has(action.capId) : false,
+        radio: state.radio.has(action.capId),
       })
       break
     }
@@ -36,6 +37,7 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
         owner: 'neutral' as Owner,
         under_attack: false,
         attacking: false,
+        radio: false,
       }))
       await supabase.from('cap_ownership').upsert(rows, { onConflict: 'room_id,cap_id' })
       break
@@ -47,6 +49,10 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
 
     case 'TOGGLE_ATTACKING':
       await upsertCap(roomId, action.capId, { attacking: !state.attacking.has(action.capId) })
+      break
+
+    case 'TOGGLE_RADIO':
+      await upsertCap(roomId, action.capId, { radio: !state.radio.has(action.capId) })
       break
   }
 }

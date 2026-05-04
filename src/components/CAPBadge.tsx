@@ -19,14 +19,16 @@ interface CAPBadgeProps {
   isFriendly: boolean
   isEnemy: boolean
   isAttacking: boolean
+  hasRadio: boolean
   onCycle: () => void
   onSetOwner: (owner: Owner) => void
   onSetLav: () => void
   onToggleAttack: () => void
   onToggleAttacking: () => void
+  onToggleRadio: () => void
 }
 
-export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking }: CAPBadgeProps) {
+export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, hasRadio, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking, onToggleRadio }: CAPBadgeProps) {
   return (
     <div className={`${styles.badge} ${styles[owner]} ${isLavPosition ? styles.lavActive : ''}`}>
       <button
@@ -68,6 +70,15 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
           ⚔
         </button>
       )}
+      <button
+        type="button"
+        className={`${styles.radioBtn} ${hasRadio ? styles.radioActive : ''}`}
+        onClick={onToggleRadio}
+        title={hasRadio ? 'Radio antenna ACTIVE — part of the network. Click to disable.' : 'Radio antenna inactive. Click to enable (becomes a network node).'}
+        aria-label={hasRadio ? `${name}: radio active. Click to disable.` : `Enable radio antenna at ${name}`}
+      >
+        📡
+      </button>
       <button
         type="button"
         className={styles.lavBtn}

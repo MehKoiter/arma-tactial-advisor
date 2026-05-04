@@ -7,6 +7,7 @@ export interface CapStateRow {
   owner: Owner
   under_attack: boolean
   attacking: boolean
+  radio: boolean
 }
 
 export interface OwnershipState {
@@ -22,6 +23,8 @@ export interface OwnershipState {
   underAttack: ReadonlySet<string>
   /** Enemy CAP IDs we are currently attacking */
   attacking: ReadonlySet<string>
+  /** CAP IDs that currently have an active radio antenna (network node) */
+  radio: ReadonlySet<string>
 }
 
 export type OwnershipAction =
@@ -34,6 +37,7 @@ export type OwnershipAction =
   | { type: 'SET_VEHICLE_TYPE'; vehicleType: VehicleType }
   | { type: 'TOGGLE_UNDER_ATTACK'; capId: string }
   | { type: 'TOGGLE_ATTACKING'; capId: string }
+  | { type: 'TOGGLE_RADIO'; capId: string }
   | { type: 'HYDRATE'; rows: CapStateRow[] }
   | { type: 'SET_ROW'; row: CapStateRow }
 
@@ -75,6 +79,7 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
         ownership: Object.fromEntries(Object.keys(state.ownership).map((id) => [id, 'neutral'])),
         underAttack: new Set(),
         attacking: new Set(),
+        radio: new Set(),
       }
 
     case 'SET_LAV_POSITION':
@@ -103,37 +108,55 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       return { ...state, attacking: atk }
     }
 
+    case 'TOGGLE_RADIO': {
+      const r = new Set(state.radio)
+      if (r.has(action.capId)) r.delete(action.capId)
+      else r.add(action.capId)
+      return { ...state, radio: r }
+    }
+
     case 'HYDRATE': {
       const ownership = { ...state.ownership }
       const ua = new Set<string>()
       const atk = new Set<string>()
+      const r = new Set<string>()
       for (const row of action.rows) {
         ownership[row.cap_id] = row.owner
         if (row.under_attack) ua.add(row.cap_id)
         if (row.attacking) atk.add(row.cap_id)
+        if (row.radio) r.add(row.cap_id)
       }
-      return { ...state, ownership, underAttack: ua, attacking: atk }
+      return { ...state, ownership, underAttack: ua, attacking: atk, radio: r }
     }
 
     case 'SET_ROW': {
-      const { cap_id, owner, under_attack, attacking } = action.row
+      const { cap_id, owner, under_attack, attacking, radio } = action.row
       const currentOwner = state.ownership[cap_id] ?? 'neutral'
       const currentUA = state.underAttack.has(cap_id)
       const currentAtk = state.attacking.has(cap_id)
+      const currentRadio = state.radio.has(cap_id)
       // Bail-out: skip re-render if nothing actually changed (prevents
       // self-broadcast loops from realtime triggering redundant renders)
-      if (currentOwner === owner && currentUA === under_attack && currentAtk === attacking) {
+      if (
+        currentOwner === owner &&
+        currentUA === under_attack &&
+        currentAtk === attacking &&
+        currentRadio === radio
+      ) {
         return state
       }
       const ua = new Set(state.underAttack)
       const atk = new Set(state.attacking)
+      const r = new Set(state.radio)
       if (under_attack) ua.add(cap_id); else ua.delete(cap_id)
       if (attacking) atk.add(cap_id); else atk.delete(cap_id)
+      if (radio) r.add(cap_id); else r.delete(cap_id)
       return {
         ...state,
         ownership: { ...state.ownership, [cap_id]: owner },
         underAttack: ua,
         attacking: atk,
+        radio: r,
       }
     }
 
@@ -150,5 +173,6 @@ export function buildInitialOwnership(capIds: string[]): OwnershipState {
     vehicleType: 'LAV',
     underAttack: new Set(),
     attacking: new Set(),
+    radio: new Set(),
   }
 }

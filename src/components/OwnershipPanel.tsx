@@ -76,6 +76,7 @@ export function OwnershipPanel() {
                     isFriendly={owner === state.playerTeam}
                     isEnemy={owner === enemyTeam}
                     isAttacking={state.attacking.has(cap.id)}
+                    hasRadio={state.radio.has(cap.id)}
                     onCycle={() => dispatch({ type: 'CYCLE_OWNER', capId: cap.id })}
                     onSetOwner={(o) => dispatch({ type: 'SET_OWNER', capId: cap.id, owner: o })}
                     onSetLav={() =>
@@ -86,6 +87,7 @@ export function OwnershipPanel() {
                     }
                     onToggleAttack={() => dispatch({ type: 'TOGGLE_UNDER_ATTACK', capId: cap.id })}
                     onToggleAttacking={() => dispatch({ type: 'TOGGLE_ATTACKING', capId: cap.id })}
+                    onToggleRadio={() => dispatch({ type: 'TOGGLE_RADIO', capId: cap.id })}
                   />
                 )
               })}

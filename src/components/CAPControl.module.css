@@ -91,6 +91,30 @@
   animation: flashAttack 0.9s ease-in-out infinite;
 }
 
+/* Radio-antenna toggle (shown on every CAP) */
+.radioBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 2px;
+  border-radius: 3px;
+  color: #555;
+  line-height: 1;
+  filter: grayscale(1) brightness(0.7);
+  transition: filter 0.15s, color 0.15s;
+}
+
+.radioBtn:hover {
+  filter: grayscale(0.4) brightness(1);
+}
+
+.radioBtn.radioActive {
+  filter: none;
+  color: #4fc3f7;
+  text-shadow: 0 0 4px rgba(79, 195, 247, 0.6);
+}
+
 @keyframes flashAttack {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.35; }
