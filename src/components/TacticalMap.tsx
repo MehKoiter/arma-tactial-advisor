@@ -80,6 +80,7 @@ export function TacticalMap() {
   const { provider: routingProvider } = useRouting()
   const { tab, primaryList, secondaryList, showSupplies } = useRecommendation()
   const [selectedSuggestion, setSelectedSuggestion] = useState<AnyScored | null>(null)
+  const [hoveredAnchorId, setHoveredAnchorId] = useState<string | null>(null)
   const RANGEFINDER_RINGS = RANGEFINDER_RINGS_BY_VEHICLE[state.vehicleType] ?? RANGEFINDER_RINGS_BY_VEHICLE['LAV']
   const [routes, setRoutes] = useState<globalThis.Map<string, RouteResult>>(new globalThis.Map())
   const [rangefinderActive, setRangefinderActive] = useState(false)
@@ -191,7 +192,11 @@ export function TacticalMap() {
       .map((f) => mobs[f] ? { faction: f, lng: mobs[f]!.lng, lat: mobs[f]!.lat } : null)
       .filter((x): x is { faction: 'US' | 'RUS'; lng: number; lat: number } => x != null)
     const mobLinks = computeMobRadioLinks(everonCAPs, state.ownership, state.radio, mobAnchors)
-    const links = [...capLinks, ...mobLinks]
+    const allLinks = [...capLinks, ...mobLinks]
+    // Only show links that touch the hovered CAP/MOB to keep the map readable.
+    const links = hoveredAnchorId
+      ? allLinks.filter((l) => l.fromId === hoveredAnchorId || l.toId === hoveredAnchorId)
+      : []
     return {
       type: 'FeatureCollection' as const,
       features: links.map((l) => ({
@@ -206,20 +211,24 @@ export function TacticalMap() {
         properties: { owner: l.owner, distanceM: Math.round(l.distanceM) },
       })),
     }
-  }, [state.ownership, state.radio, mobs])
+  }, [state.ownership, state.radio, mobs, hoveredAnchorId])
 
   // Attack-projection lines: from each friendly online CAP/MOB to enemy CAPs in radio range.
   const { attackProjectionGeoJSON, attackableEnemiesGeoJSON } = useMemo(() => {
     const playerTeam = state.playerTeam
     const myMob = mobs[playerTeam] ? { lng: mobs[playerTeam]!.lng, lat: mobs[playerTeam]!.lat } : null
     const myRadio = analyzeRadioNetwork(everonCAPs, state, playerTeam, undefined, myMob)
-    const lines = computeAttackProjectionLines(
+    const allLines = computeAttackProjectionLines(
       everonCAPs,
       state.ownership,
       playerTeam,
       myRadio.onlineSet,
       myMob,
     )
+    // Only show projection lines/halos involving the hovered CAP/MOB.
+    const lines = hoveredAnchorId
+      ? allLines.filter((l) => l.fromId === hoveredAnchorId || l.toId === hoveredAnchorId)
+      : []
     const linesFC = {
       type: 'FeatureCollection' as const,
       features: lines.map((l) => ({
@@ -243,7 +252,7 @@ export function TacticalMap() {
       })),
     }
     return { attackProjectionGeoJSON: linesFC, attackableEnemiesGeoJSON: haloFC }
-  }, [state, mobs])
+  }, [state, mobs, hoveredAnchorId])
 
   // Two GeoJSON sets — one encodes "how good" (rating 5 = weight 1), one "how bad" (rating 1 = weight 1).
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
@@ -568,7 +577,11 @@ export function TacticalMap() {
               latitude={cap.coords.lat}
               anchor="center"
             >
-              <div style={{ position: 'relative' }}>
+              <div
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setHoveredAnchorId(cap.id)}
+                onMouseLeave={() => setHoveredAnchorId((id) => (id === cap.id ? null : id))}
+              >
                 {isUnderAttack && <div className={styles.underAttackRing} />}
                 {isAttacking && <div className={styles.attackingRing} />}
                 <div
@@ -602,6 +615,8 @@ export function TacticalMap() {
                 style={{ '--mob-color': MOB_COLORS[faction] } as React.CSSProperties}
                 title={`${faction} MOB${isFriendly ? ' (friendly)' : ' (enemy — discovered)'} — right-click map to move or clear`}
                 aria-label={`${faction} MOB`}
+                onMouseEnter={() => setHoveredAnchorId(`MOB_${faction}`)}
+                onMouseLeave={() => setHoveredAnchorId((id) => (id === `MOB_${faction}` ? null : id))}
               >
                 <span className={styles.mobGlyph}>{MOB_GLYPH}</span>
                 <span className={styles.mobLabel}>{faction} MOB</span>
