@@ -149,7 +149,7 @@ const everonCAPs: CAPDataset = [
     ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MORTON_VALLEY'],
     'central'),
 
-  cap('CAP_CHOTAIN_TOWN', 'Chotain Town',   'CHT', 'minor',  7100,      7100,
+  cap('CAP_CHOTAIN_TOWN', 'Chotain Town',   'CHT', 'minor',  6800,      7400,
     ['CAP_CHOTAIN', 'CAP_ANDRES_BEACON', 'CAP_ENTRE_DEUX', 'CAP_LARUNS', 'CAP_COASTAL_BASE_CHOTAIN'],
     'central'),
 
@@ -161,7 +161,7 @@ const everonCAPs: CAPDataset = [
     ['CAP_FIGARI', 'CAP_LEVIE', 'CAP_LARUNS', 'CAP_MORTON', 'CAP_CAMURAC'],
     'central'),
 
-  cap('CAP_COASTAL_BASE_CHOTAIN', 'Coastal Base Chotain', 'CBC', 'major', 7450, 7900,
+  cap('CAP_COASTAL_BASE_CHOTAIN', 'Coastal Base Chotain', 'CBC', 'major', 7150, 7800,
     ['CAP_CHOTAIN', 'CAP_CHOTAIN_TOWN', 'CAP_ANDRES_BEACON'],
     'east'),
 ]
