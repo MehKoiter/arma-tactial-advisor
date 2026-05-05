@@ -14,6 +14,8 @@ export const CAPSchema = z.object({
   zone: z.enum(['north', 'central', 'south', 'east', 'west']).optional(),
   /** Major bases are larger objectives; minor are smaller capture points */
   type: z.enum(['major', 'minor']).default('minor'),
+  /** Approximate ground elevation in metres (from in-game map readout) */
+  elevationM: z.number().optional(),
 })
 
 export type CAP = z.infer<typeof CAPSchema>
