@@ -36,7 +36,7 @@ const everonCAPs: CAPDataset = [
     'west'),
 
   cap('CAP_CHOTAIN',      'Chotain',     'CHO', 'major',  7444.065,  6697.595,
-    ['CAP_ANDRES_BEACON', 'CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LEVIE', 'CAP_QUARRY', 'CAP_ENTRE_DEUX', 'CAP_LARUNS'],
+    ['CAP_ANDRES_BEACON', 'CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LEVIE', 'CAP_QUARRY', 'CAP_ENTRE_DEUX', 'CAP_LARUNS', 'CAP_CHOTAIN_TOWN'],
     'central'),
 
   cap('CAP_ST_PIERRE',    'St Pierre',   'STP', 'major',  9689.432,  1558.166,
@@ -61,7 +61,7 @@ const everonCAPs: CAPDataset = [
     'north'),
 
   cap('CAP_ANDRES_BEACON','Andres Beacon','AND', 'minor',  6843.832,  8191.218,
-    ['CAP_POWER_PLANT', 'CAP_TYRONE', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_KERMOVAN'],
+    ['CAP_POWER_PLANT', 'CAP_TYRONE', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_KERMOVAN', 'CAP_CHOTAIN_TOWN'],
     'north'),
 
   cap('CAP_GRAVETTE',     'Gravette',    'GRV', 'minor',  4128.282,  7792.364,
@@ -110,7 +110,7 @@ const everonCAPs: CAPDataset = [
 
   // ── MISSING CAPs (sourced from EnfusionMapMaker everon-locations.js) ────────
   cap('CAP_ENTRE_DEUX',   'Entre Deux',      'EDT', 'minor',  5760.571,  7061.821,
-    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN'],
+    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN', 'CAP_CHOTAIN_TOWN'],
     'central'),
 
   cap('CAP_KERMOVAN',     'Kermovan',        'KER', 'minor',  6359.376,  9668.684,
@@ -130,7 +130,7 @@ const everonCAPs: CAPDataset = [
     'central'),
 
   cap('CAP_LARUNS',       'Laruns',          'LAR', 'minor',  7429.288,  5318.843,
-    ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI'],
+    ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_CHOTAIN_TOWN'],
     'east'),
 
   cap('CAP_CALVARY_HILL', 'Calvary Hill',    'CAL', 'minor',  3500,      5700,
@@ -147,6 +147,10 @@ const everonCAPs: CAPDataset = [
 
   cap('CAP_PINEWOOD_LAKE', 'Pinewood Lake',  'PWL', 'minor',  4400,      6100,
     ['CAP_GRAVETTE', 'CAP_MONTIGNAC', 'CAP_VILLENEUVE', 'CAP_MORTON_VALLEY'],
+    'central'),
+
+  cap('CAP_CHOTAIN_TOWN', 'Chotain Town',   'CHT', 'minor',  7100,      7100,
+    ['CAP_CHOTAIN', 'CAP_ANDRES_BEACON', 'CAP_ENTRE_DEUX', 'CAP_LARUNS'],
     'central'),
 ]
 
