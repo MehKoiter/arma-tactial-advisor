@@ -81,23 +81,23 @@ const everonCAPs: CAPDataset = [
     'central'),
 
   cap('CAP_FIGARI',       'Figari',      'FIG', 'minor',  5256.366,  5341.263,
-    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_MORTON', 'CAP_MORTON_VALLEY'],
+    ['CAP_MONTIGNAC', 'CAP_PROVINS', 'CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_MORTON', 'CAP_MORTON_VALLEY', 'CAP_SIMONS_WOOD'],
     'central'),
 
   cap('CAP_LEVIE',        'Levie',       'LEV', 'minor',  7476.739,  4301.884,
-    ['CAP_ANDRES_BEACON', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_QUARRY', 'CAP_LARUNS'],
+    ['CAP_ANDRES_BEACON', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_QUARRY', 'CAP_LARUNS', 'CAP_MILITARY_BASE_LEVIE', 'CAP_SIMONS_WOOD'],
     'east'),
 
   cap('CAP_QUARRY',       'Quarry',      'QRY', 'minor',  8786.965,  3913.078,
-    ['CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_DURRAS', 'CAP_ST_PIERRE'],
+    ['CAP_CHOTAIN', 'CAP_LEVIE', 'CAP_DURRAS', 'CAP_ST_PIERRE', 'CAP_MILITARY_BASE_LEVIE'],
     'east'),
 
   cap('CAP_MORTON',       'Morton',      'MRT', 'minor',  4956.796,  3875.627,
-    ['CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LAMENTIN', 'CAP_CAMURAC', 'CAP_OLD_WOOD', 'CAP_MORTON_VALLEY'],
+    ['CAP_VILLENEUVE', 'CAP_PROVINS', 'CAP_FIGARI', 'CAP_LAMENTIN', 'CAP_CAMURAC', 'CAP_OLD_WOOD', 'CAP_MORTON_VALLEY', 'CAP_SIMONS_WOOD'],
     'south'),
 
   cap('CAP_CAMURAC',      'Camurac',     'CAM', 'minor',  6594.162,  3116.684,
-    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_REGINA'],
+    ['CAP_MORTON', 'CAP_FIGARI', 'CAP_REGINA', 'CAP_MILITARY_BASE_LEVIE', 'CAP_SIMONS_WOOD'],
     'south'),
 
   cap('CAP_REGINA',       'Regina',      'REG', 'minor',  7188.38,   2312.382,
@@ -130,7 +130,7 @@ const everonCAPs: CAPDataset = [
     'central'),
 
   cap('CAP_LARUNS',       'Laruns',          'LAR', 'minor',  7429.288,  5318.843,
-    ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_CHOTAIN_TOWN'],
+    ['CAP_LEVIE', 'CAP_CHOTAIN', 'CAP_FIGARI', 'CAP_CHOTAIN_TOWN', 'CAP_MILITARY_BASE_LEVIE', 'CAP_SIMONS_WOOD'],
     'east'),
 
   cap('CAP_CALVARY_HILL', 'Calvary Hill',    'CAL', 'minor',  3500,      5700,
@@ -151,6 +151,14 @@ const everonCAPs: CAPDataset = [
 
   cap('CAP_CHOTAIN_TOWN', 'Chotain Town',   'CHT', 'minor',  7100,      7100,
     ['CAP_CHOTAIN', 'CAP_ANDRES_BEACON', 'CAP_ENTRE_DEUX', 'CAP_LARUNS'],
+    'central'),
+
+  cap('CAP_MILITARY_BASE_LEVIE', 'Military Base Levie', 'MBL', 'major', 7400, 3700,
+    ['CAP_LEVIE', 'CAP_LARUNS', 'CAP_QUARRY', 'CAP_CAMURAC'],
+    'east'),
+
+  cap('CAP_SIMONS_WOOD', "Simon's Wood",    'SIM', 'minor',  5900,      4500,
+    ['CAP_FIGARI', 'CAP_LEVIE', 'CAP_LARUNS', 'CAP_MORTON', 'CAP_CAMURAC'],
     'central'),
 ]
 
