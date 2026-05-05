@@ -161,7 +161,7 @@ const everonCAPs: CAPDataset = [
     ['CAP_FIGARI', 'CAP_LEVIE', 'CAP_LARUNS', 'CAP_MORTON', 'CAP_CAMURAC'],
     'central'),
 
-  cap('CAP_COASTAL_BASE_CHOTAIN', 'Coastal Base Chotain', 'CBC', 'major', 7800, 7600,
+  cap('CAP_COASTAL_BASE_CHOTAIN', 'Coastal Base Chotain', 'CBC', 'major', 7450, 7900,
     ['CAP_CHOTAIN', 'CAP_CHOTAIN_TOWN', 'CAP_ANDRES_BEACON'],
     'east'),
 ]
