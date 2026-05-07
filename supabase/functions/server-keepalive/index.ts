@@ -3,12 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-Deno.serve(async (req: Request) => {
-  const auth = req.headers.get('Authorization')
-  if (auth !== `Bearer ${SERVICE_KEY}`) {
-    return new Response('Unauthorized', { status: 401 })
-  }
-
+Deno.serve(async (_req: Request) => {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY)
 
   const { data: rooms, error } = await admin

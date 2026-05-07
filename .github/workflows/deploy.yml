@@ -63,7 +63,7 @@ jobs:
           version: latest
 
       - name: Deploy Edge Functions
-        run: supabase functions deploy server-keepalive --project-ref krwzrslsbnycjuevrqek --no-verify-jwt
+        run: supabase functions deploy server-keepalive --project-ref krwzrslsbnycjuevrqek
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
