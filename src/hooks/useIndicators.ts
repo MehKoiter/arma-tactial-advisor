@@ -16,9 +16,6 @@ function rowToIndicator(r: IndicatorRow): PlacedIndicator {
   return { uid: r.uid, typeId: r.type_id, lng: r.lng, lat: r.lat }
 }
 
-let _uid = Date.now()
-function nextUid() { return String(++_uid) }
-
 export function useIndicators() {
   const { slug: roomId } = useRoom()
   const [indicators, setIndicators] = useState<PlacedIndicator[]>([])
@@ -45,8 +42,8 @@ export function useIndicators() {
         { event: 'INSERT', schema: 'public', table: 'indicators', filter: `room_id=eq.${roomId}` },
         (payload) => {
           const ind = rowToIndicator(payload.new as IndicatorRow)
-          setIndicators((prev) => prev.some((i) => i.uid === ind.uid) ? prev : [...prev, ind])
-        }
+          setIndicators((prev) => (prev.some((i) => i.uid === ind.uid) ? prev : [...prev, ind]))
+        },
       )
       .on(
         'postgres_changes',
@@ -54,25 +51,33 @@ export function useIndicators() {
         (payload) => {
           const uid = (payload.old as { uid: string }).uid
           setIndicators((prev) => prev.filter((i) => i.uid !== uid))
-        }
+        },
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [roomId])
 
-  const addIndicator = useCallback(async (typeId: string, lng: number, lat: number) => {
-    const uid = nextUid()
-    // Optimistic update
-    setIndicators((prev) => [...prev, { uid, typeId, lng, lat }])
-    await supabase.from('indicators').insert({ uid, type_id: typeId, lng, lat, room_id: roomId })
-  }, [roomId])
+  const addIndicator = useCallback(
+    async (typeId: string, lng: number, lat: number) => {
+      const uid = crypto.randomUUID()
+      // Optimistic update
+      setIndicators((prev) => [...prev, { uid, typeId, lng, lat }])
+      await supabase.from('indicators').insert({ uid, type_id: typeId, lng, lat, room_id: roomId })
+    },
+    [roomId],
+  )
 
-  const removeIndicator = useCallback(async (uid: string) => {
-    // Optimistic update
-    setIndicators((prev) => prev.filter((i) => i.uid !== uid))
-    await supabase.from('indicators').delete().eq('uid', uid).eq('room_id', roomId)
-  }, [roomId])
+  const removeIndicator = useCallback(
+    async (uid: string) => {
+      // Optimistic update
+      setIndicators((prev) => prev.filter((i) => i.uid !== uid))
+      await supabase.from('indicators').delete().eq('uid', uid).eq('room_id', roomId)
+    },
+    [roomId],
+  )
 
   const clearIndicators = useCallback(async () => {
     setIndicators([])

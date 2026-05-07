@@ -26,9 +26,6 @@ function rowToNote(r: NoteRow): PositionNote {
   }
 }
 
-let _uid = Date.now()
-function nextUid() { return String(++_uid) }
-
 export function usePositionNotes() {
   const { slug: roomId } = useRoom()
   const [notes, setNotes] = useState<PositionNote[]>([])
@@ -52,37 +49,63 @@ export function usePositionNotes() {
       .channel(`position_notes_changes_${roomId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'position_notes', filter: `room_id=eq.${roomId}` },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'position_notes',
+          filter: `room_id=eq.${roomId}`,
+        },
         (payload) => {
           const note = rowToNote(payload.new as NoteRow)
-          setNotes((prev) => prev.some((n) => n.uid === note.uid) ? prev : [...prev, note])
-        }
+          setNotes((prev) => (prev.some((n) => n.uid === note.uid) ? prev : [...prev, note]))
+        },
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'position_notes', filter: `room_id=eq.${roomId}` },
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'position_notes',
+          filter: `room_id=eq.${roomId}`,
+        },
         (payload) => {
           const uid = (payload.old as { uid: string }).uid
           setNotes((prev) => prev.filter((n) => n.uid !== uid))
-        }
+        },
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [roomId])
 
-  const addNote = useCallback(async (lng: number, lat: number, rating: Rating, capId: string, vehicleType: VehicleType) => {
-    const uid = nextUid()
-    // Optimistic update
-    setNotes((prev) => [...prev, { uid, capId, vehicleType, lng, lat, rating }])
-    await supabase.from('position_notes').insert({ uid, cap_id: capId, vehicle_type: vehicleType, lng, lat, rating, room_id: roomId })
-  }, [roomId])
+  const addNote = useCallback(
+    async (lng: number, lat: number, rating: Rating, capId: string, vehicleType: VehicleType) => {
+      const uid = crypto.randomUUID()
+      // Optimistic update
+      setNotes((prev) => [...prev, { uid, capId, vehicleType, lng, lat, rating }])
+      await supabase.from('position_notes').insert({
+        uid,
+        cap_id: capId,
+        vehicle_type: vehicleType,
+        lng,
+        lat,
+        rating,
+        room_id: roomId,
+      })
+    },
+    [roomId],
+  )
 
-  const removeNote = useCallback(async (uid: string) => {
-    // Optimistic update
-    setNotes((prev) => prev.filter((n) => n.uid !== uid))
-    await supabase.from('position_notes').delete().eq('uid', uid).eq('room_id', roomId)
-  }, [roomId])
+  const removeNote = useCallback(
+    async (uid: string) => {
+      // Optimistic update
+      setNotes((prev) => prev.filter((n) => n.uid !== uid))
+      await supabase.from('position_notes').delete().eq('uid', uid).eq('room_id', roomId)
+    },
+    [roomId],
+  )
 
   const clearNotes = useCallback(async () => {
     setNotes([])
