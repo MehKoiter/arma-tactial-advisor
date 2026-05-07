@@ -160,8 +160,8 @@ function CAPBadgeInner({
         type="button"
         className={styles.lavBtn}
         onClick={handleSetLav}
-        title={isLavPosition ? 'LAV is here' : 'Set as LAV position'}
-        aria-label={isLavPosition ? `LAV at ${name}` : `Set LAV position to ${name}`}
+        title={isLavPosition ? 'LAV is here' : 'Set as Spawn Location'}
+        aria-label={isLavPosition ? `LAV at ${name}` : `Set spawn location to ${name}`}
       >
         {isLavPosition ? '▲' : '○'}
       </button>
