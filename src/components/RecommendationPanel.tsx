@@ -7,12 +7,14 @@ const VEHICLE_HINTS: Record<string, string> = {
   LAV:            'Set LAV position (▲) to enable route scoring.',
   ATTACK_HELO:    'Set spawn position (▲) to enable range scoring.',
   TRANSPORT_HELO: 'Set spawn position (▲) to enable range scoring.',
+  INFANTRY:       'Set squad position (▲) to enable on-foot range scoring.',
 }
 
 const EMPTY_MESSAGES: Record<string, { primary: string; secondary: string }> = {
   LAV:            { primary: 'No friendly CAPs. Mark some CAPs as friendly.', secondary: 'No frontline targets. Ensure friendly CAPs border enemy territory.' },
   ATTACK_HELO:    { primary: 'No enemy targets. Mark some CAPs as enemy.', secondary: '' },
   TRANSPORT_HELO: { primary: 'No friendly CAPs to resupply. Mark some CAPs as friendly.', secondary: 'No active assaults. Mark enemy CAPs as being attacked (⚔) to see reinforce targets.' },
+  INFANTRY:       { primary: 'No friendly CAPs to garrison. Mark some CAPs as friendly.', secondary: 'No enemy CAPs in foot range. Move closer to a contested frontline.' },
 }
 
 export function RecommendationPanel() {

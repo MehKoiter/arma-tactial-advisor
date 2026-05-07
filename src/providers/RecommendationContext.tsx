@@ -6,14 +6,18 @@ import {
   scoreStrikeTargets,
   scoreResupplyTargets,
   scoreReinforceTargets,
+  scoreInfantryDefend,
+  scoreInfantryAssault,
 } from '@/scoring/scoringEngine'
-import type { ScoredCAP, AttackScoredCAP, StrikeScoredCAP, ResupplyScoredCAP, ReinforceScoredCAP } from '@/scoring/scoringEngine'
+import type { ScoredCAP, AttackScoredCAP, StrikeScoredCAP, ResupplyScoredCAP, ReinforceScoredCAP, InfantryDefendScoredCAP, InfantryAssaultScoredCAP } from '@/scoring/scoringEngine'
 import {
   DEFAULT_SCORING_CONFIG,
   DEFAULT_ATTACK_CONFIG,
   DEFAULT_ATTACK_HELO_CONFIG,
   DEFAULT_TRANSPORT_HELO_CONFIG,
   DEFAULT_REINFORCE_CONFIG,
+  DEFAULT_INFANTRY_DEFEND_CONFIG,
+  DEFAULT_INFANTRY_ASSAULT_CONFIG,
 } from '@/scoring/scoringConfig'
 import { usePositionNotesContext } from '@/providers/PositionNotesContext'
 import { useMobsContext } from '@/providers/MobsContext'
@@ -25,12 +29,13 @@ export const VEHICLE_TABS: Record<string, { primary: string; secondary: string |
   LAV:            { primary: '🛡 Defend', secondary: '⚔ Attack' },
   ATTACK_HELO:    { primary: '🎯 Strike', secondary: null },
   TRANSPORT_HELO: { primary: '🚁 Resupply', secondary: '⚔ Reinforce' },
+  INFANTRY:       { primary: '🛡 Garrison', secondary: '⚔ Assault' },
 }
 
 export type RecommendTab = 'primary' | 'secondary'
 
 // Union type for all scored CAP variants
-export type AnyScored = ScoredCAP | AttackScoredCAP | StrikeScoredCAP | ResupplyScoredCAP | ReinforceScoredCAP
+export type AnyScored = ScoredCAP | AttackScoredCAP | StrikeScoredCAP | ResupplyScoredCAP | ReinforceScoredCAP | InfantryDefendScoredCAP | InfantryAssaultScoredCAP
 
 interface RecommendationContextValue {
   tab: RecommendTab
@@ -65,11 +70,13 @@ export function RecommendationProvider({ children }: { children: ReactNode }) {
     return out
   }, [mobs])
 
-  const primaryList = useMemo<(ScoredCAP | AttackScoredCAP | StrikeScoredCAP | ResupplyScoredCAP)[]>(() => {
+  const primaryList = useMemo<AnyScored[]>(() => {
     if (vehicleType === 'ATTACK_HELO')
       return scoreStrikeTargets(everonCAPs, state, DEFAULT_ATTACK_HELO_CONFIG, notes, everonSupplyPoints)
     if (vehicleType === 'TRANSPORT_HELO')
       return scoreResupplyTargets(everonCAPs, state, DEFAULT_TRANSPORT_HELO_CONFIG, notes, everonSupplyPoints)
+    if (vehicleType === 'INFANTRY')
+      return scoreInfantryDefend(everonCAPs, state, DEFAULT_INFANTRY_DEFEND_CONFIG, notes, everonSupplyPoints)
     return scoreCandidates(everonCAPs, state, DEFAULT_SCORING_CONFIG, notes, everonSupplyPoints, factionMobs)
   }, [state, notes, vehicleType, factionMobs])
 
@@ -78,6 +85,8 @@ export function RecommendationProvider({ children }: { children: ReactNode }) {
       return scoreAttackCandidates(everonCAPs, state, DEFAULT_ATTACK_CONFIG, notes, everonSupplyPoints, factionMobs)
     if (vehicleType === 'TRANSPORT_HELO')
       return scoreReinforceTargets(everonCAPs, state, DEFAULT_REINFORCE_CONFIG, notes, everonSupplyPoints)
+    if (vehicleType === 'INFANTRY')
+      return scoreInfantryAssault(everonCAPs, state, DEFAULT_INFANTRY_ASSAULT_CONFIG, notes, everonSupplyPoints)
     return []
   }, [state, notes, vehicleType, factionMobs])
 

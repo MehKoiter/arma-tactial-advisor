@@ -19,11 +19,13 @@ const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }
     { type: 'LAV',             label: '🚗 LAV-25' },
     { type: 'ATTACK_HELO',    label: '🚁 AH-1Z Viper' },
     { type: 'TRANSPORT_HELO', label: '🚁 UH-1Y Venom' },
+    { type: 'INFANTRY',       label: '🪖 Rifleman' },
   ],
   RUS: [
     { type: 'LAV',             label: '🚗 BTR-82A' },
     { type: 'ATTACK_HELO',    label: '🚁 Mi-24 Hind' },
     { type: 'TRANSPORT_HELO', label: '🚁 Mi-8 Hip' },
+    { type: 'INFANTRY',       label: '🪖 Rifleman' },
   ],
 }
 

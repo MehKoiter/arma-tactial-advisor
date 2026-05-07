@@ -1,6 +1,6 @@
 import type { CAP } from '@/data/capSchema'
 import type { Owner, OwnershipState, PlayerTeam } from '@/state/ownershipReducer'
-import type { ScoringConfig, AttackScoringConfig, AttackHeloConfig, TransportHeloConfig, ReinforceConfig } from './scoringConfig'
+import type { ScoringConfig, AttackScoringConfig, AttackHeloConfig, TransportHeloConfig, ReinforceConfig, InfantryDefendConfig, InfantryAssaultConfig } from './scoringConfig'
 import type { PositionNote } from '@/data/positionNotes'
 import type { SupplyPoint } from '@/data/everonSupplyPoints'
 import { bfsHopsFiltered, findArticulationPoints } from './graphAnalysis'
@@ -757,6 +757,180 @@ export function scoreReinforceTargets(
         rationale.push('Near supply depot(s) — high-value capture target')
 
       return { cap, totalScore, rationale, reinforceFactors: { isolation, majorBonus, friendlySupport, rangeScore, notesBias, supplyProximity } }
+    })
+
+  return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)
+}
+
+// ---------------------------------------------------------------------------
+// Infantry — on-foot squad scorers
+// ---------------------------------------------------------------------------
+
+export interface InfantryDefendScoredCAP {
+  cap: CAP
+  totalScore: number
+  rationale: string[]
+  infantryDefendFactors: {
+    underAttackBonus: number
+    frontlineScore: number
+    majorBonus: number
+    rangeScore: number
+    notesBias: number
+    supplyProximity: number
+  }
+}
+
+/**
+ * Ranks friendly CAPs an infantry squad should garrison/defend.
+ * Prioritises bases under attack, frontline pressure, on-foot reachability,
+ * and proximity to supply caches for ammo resupply.
+ */
+export function scoreInfantryDefend(
+  caps: CAP[],
+  ownershipState: OwnershipState,
+  config: InfantryDefendConfig,
+  notes: PositionNote[] = [],
+  supplyPoints: SupplyPoint[] = [],
+): InfantryDefendScoredCAP[] {
+  const { ownership, lavPosition, playerTeam, underAttack } = ownershipState
+  const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
+
+  const scored = caps
+    .filter((cap) => (ownership[cap.id] ?? 'neutral') === playerTeam)
+    .map((cap) => {
+      const underAttackBonus = underAttack.has(cap.id) ? 1 : 0
+
+      const enemyNeighbors = cap.neighbors.filter((n) => (ownership[n] ?? 'neutral') === enemy).length
+      const frontlineScore = enemyNeighbors / (cap.neighbors.length || 1)
+
+      const majorBonus = cap.type === 'major' ? 1 : 0
+
+      const rangeScore = straightLineRangeScore(cap, lavPosition, caps, config.maxRangeMetres)
+      const notesBias = calcNotesBias(cap, notes, config.notesSearchRadiusMetres)
+      const supplyProximity = calcSupplyProximity(cap, supplyPoints, config.supplyProximityRadiusMetres)
+
+      const totalScore =
+        underAttackBonus * config.underAttackBonus +
+        frontlineScore   * config.frontlineWeight +
+        majorBonus       * config.majorBaseBonus +
+        rangeScore       * config.rangeWeight +
+        notesBias        * config.notesBiasWeight +
+        supplyProximity  * config.supplyProximityWeight
+
+      const rationale: string[] = []
+      if (underAttackBonus)
+        rationale.push('⚠ Under active attack — garrison immediately')
+      if (enemyNeighbors > 0)
+        rationale.push(`${enemyNeighbors} enemy-adjacent neighbor(s) — frontline garrison`)
+      if (majorBonus)
+        rationale.push('Major base — buildings to fortify')
+      if (rangeScore > 0)
+        rationale.push('Within on-foot range from current position')
+      if (notesBias > 0.15)
+        rationale.push(`Good defensive ground (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
+      else if (notesBias < -0.15)
+        rationale.push(`Poor cover / known kill-zone (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
+      if (supplyProximity > 0.1)
+        rationale.push('Near supply cache — squad can rearm locally')
+      if (rationale.length === 0)
+        rationale.push('Quiet sector — low-priority garrison')
+
+      return {
+        cap,
+        totalScore,
+        rationale,
+        infantryDefendFactors: { underAttackBonus, frontlineScore, majorBonus, rangeScore, notesBias, supplyProximity },
+      }
+    })
+
+  return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)
+}
+
+export interface InfantryAssaultScoredCAP {
+  cap: CAP
+  totalScore: number
+  rationale: string[]
+  infantryAssaultFactors: {
+    momentum: number
+    friendlySupport: number
+    isolation: number
+    majorPenalty: number
+    rangeScore: number
+    notesBias: number
+    supplyProximity: number
+  }
+}
+
+/**
+ * Ranks enemy CAPs an infantry squad should assault on foot.
+ * Tilts toward isolated minor bases adjacent to friendlies within walking range.
+ */
+export function scoreInfantryAssault(
+  caps: CAP[],
+  ownershipState: OwnershipState,
+  config: InfantryAssaultConfig,
+  notes: PositionNote[] = [],
+  supplyPoints: SupplyPoint[] = [],
+): InfantryAssaultScoredCAP[] {
+  const { ownership, lavPosition, playerTeam, attacking } = ownershipState
+  const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
+
+  const scored = caps
+    .filter((cap) => (ownership[cap.id] ?? 'neutral') === enemy)
+    .map((cap) => {
+      const momentum = attacking.has(cap.id) ? 1 : 0
+
+      const friendlySupport = cap.neighbors.filter((n) => (ownership[n] ?? 'neutral') === playerTeam).length
+
+      const enemySupporters = cap.neighbors.filter((n) => (ownership[n] ?? 'neutral') === enemy).length
+      const isolation = cap.neighbors.length
+        ? 1 - enemySupporters / cap.neighbors.length
+        : 1
+
+      // Major bases are harder to clear on foot — apply a flat penalty.
+      const majorPenalty = cap.type === 'major' ? 1 : 0
+
+      const rangeScore = straightLineRangeScore(cap, lavPosition, caps, config.maxRangeMetres)
+      const notesBias = calcNotesBias(cap, notes, config.notesSearchRadiusMetres)
+      const supplyProximity = calcSupplyProximity(cap, supplyPoints, config.supplyProximityRadiusMetres)
+
+      const totalScore =
+        momentum         * config.momentumWeight +
+        friendlySupport  * config.friendlySupportWeight +
+        isolation        * config.isolationWeight +
+        rangeScore       * config.rangeWeight +
+        notesBias        * config.notesBiasWeight +
+        supplyProximity  * config.supplyProximityWeight -
+        majorPenalty     * config.majorBasePenalty
+
+      const rationale: string[] = []
+      if (momentum)
+        rationale.push('⚔ Already engaging — keep momentum')
+      if (friendlySupport > 0)
+        rationale.push(`${friendlySupport} friendly CAP(s) adjacent — staging support`)
+      if (isolation >= 0.6)
+        rationale.push('Isolated target — limited enemy reinforcement')
+      else if (isolation < 0.4)
+        rationale.push('Enemy reinforcements nearby — fast assault required')
+      if (majorPenalty)
+        rationale.push('Major base — hard to clear on foot, prefer fire support')
+      if (rangeScore > 0)
+        rationale.push('Within on-foot range from current position')
+      if (notesBias > 0.15)
+        rationale.push(`Good approach (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
+      else if (notesBias < -0.15)
+        rationale.push(`Known threats on approach (avg ${(notesBias * 2 + 3).toFixed(1)}/5)`)
+      if (supplyProximity > 0.1)
+        rationale.push('Capturing grants supply access')
+      if (rationale.length === 0)
+        rationale.push('Capturable enemy CAP within foot range')
+
+      return {
+        cap,
+        totalScore,
+        rationale,
+        infantryAssaultFactors: { momentum, friendlySupport, isolation, majorPenalty, rangeScore, notesBias, supplyProximity },
+      }
     })
 
   return scored.sort((a, b) => b.totalScore - a.totalScore).slice(0, config.topN)

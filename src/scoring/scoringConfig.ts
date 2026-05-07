@@ -293,6 +293,84 @@ export const DEFAULT_REINFORCE_CONFIG: ReinforceConfig = {
 }
 
 // ---------------------------------------------------------------------------
+// Infantry — on-foot squad config
+// ---------------------------------------------------------------------------
+
+/**
+ * Scoring config for ranking friendly CAPs an infantry squad should garrison.
+ */
+export interface InfantryDefendConfig {
+  /** High bonus when the friendly CAP is currently under attack. */
+  underAttackBonus: number
+  /** Bonus per enemy-adjacent neighbor — frontline garrison priority. */
+  frontlineWeight: number
+  /** Bonus for major bases — more buildings to fortify. */
+  majorBaseBonus: number
+  /** Reachability within maxRangeMetres straight-line from squad position. */
+  rangeWeight: number
+  /** Maximum on-foot operating range in metres. */
+  maxRangeMetres: number
+  /** Notes-bias weight (uses position notes tagged for INFANTRY). */
+  notesBiasWeight: number
+  notesSearchRadiusMetres: number
+  /** Bonus for friendly CAPs near supply caches — squad can rearm locally. */
+  supplyProximityWeight: number
+  supplyProximityRadiusMetres: number
+  topN: number
+}
+
+export const DEFAULT_INFANTRY_DEFEND_CONFIG: InfantryDefendConfig = {
+  underAttackBonus: 5.0,
+  frontlineWeight: 2.5,
+  majorBaseBonus: 1.5,
+  rangeWeight: 2.0,
+  maxRangeMetres: 1500,
+  notesBiasWeight: 1.5,
+  notesSearchRadiusMetres: 300,
+  supplyProximityWeight: 1.5,
+  supplyProximityRadiusMetres: 500,
+  topN: 5,
+}
+
+/**
+ * Scoring config for ranking enemy CAPs an infantry squad should assault.
+ * Tilted toward minor bases adjacent to friendlies — realistic foot-assault targets.
+ */
+export interface InfantryAssaultConfig {
+  /** Bonus when the squad is already attacking this CAP — keep momentum. */
+  momentumWeight: number
+  /** Bonus per adjacent friendly CAP — staging support. */
+  friendlySupportWeight: number
+  /** Bonus for isolation: 1 - enemyNeighbors/totalNeighbors. */
+  isolationWeight: number
+  /** Penalty for major bases — harder to take on foot. */
+  majorBasePenalty: number
+  /** Reachability within maxRangeMetres straight-line. */
+  rangeWeight: number
+  maxRangeMetres: number
+  notesBiasWeight: number
+  notesSearchRadiusMetres: number
+  /** Bonus for enemy CAPs near supply caches — high-value capture. */
+  supplyProximityWeight: number
+  supplyProximityRadiusMetres: number
+  topN: number
+}
+
+export const DEFAULT_INFANTRY_ASSAULT_CONFIG: InfantryAssaultConfig = {
+  momentumWeight: 2.0,
+  friendlySupportWeight: 3.0,
+  isolationWeight: 2.5,
+  majorBasePenalty: 1.5,
+  rangeWeight: 2.0,
+  maxRangeMetres: 1500,
+  notesBiasWeight: 1.5,
+  notesSearchRadiusMetres: 300,
+  supplyProximityWeight: 2.0,
+  supplyProximityRadiusMetres: 500,
+  topN: 5,
+}
+
+// ---------------------------------------------------------------------------
 // Rangefinder ring definitions per vehicle type
 // ---------------------------------------------------------------------------
 
@@ -316,5 +394,10 @@ export const RANGEFINDER_RINGS_BY_VEHICLE: Record<string, RangefinderRing[]> = {
   ],
   TRANSPORT_HELO: [
     { key: 'lz', label: 'LZ radius (200 m)', radiusM: 200, color: '#ab47bc' },
+  ],
+  INFANTRY: [
+    { key: 'min',   label: 'CQB (100 m)',     radiusM: 100, color: '#ef5350' },
+    { key: 'ideal', label: 'Engage (300 m)',  radiusM: 300, color: '#66bb6a' },
+    { key: 'max',   label: 'Max (500 m)',     radiusM: 500, color: '#ffa726' },
   ],
 }

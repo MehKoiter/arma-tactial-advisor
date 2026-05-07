@@ -1,6 +1,6 @@
 export type Owner = 'neutral' | 'US' | 'RUS'
 export type PlayerTeam = 'US' | 'RUS'
-export type VehicleType = 'LAV' | 'ATTACK_HELO' | 'TRANSPORT_HELO'
+export type VehicleType = 'LAV' | 'ATTACK_HELO' | 'TRANSPORT_HELO' | 'INFANTRY'
 
 export interface CapStateRow {
   cap_id: string
