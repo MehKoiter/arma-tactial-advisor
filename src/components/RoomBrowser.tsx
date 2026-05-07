@@ -144,7 +144,7 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
                       type="button"
                       className={`${styles.row} ${active ? styles.active : styles.inactive}`}
                       onClick={() => onPick(room)}
-                      title={active ? 'Active in the last 5 minutes' : 'Inactive'}
+                      title={active ? 'Active in the last 5 minutes' : 'Inactive — click to re-open'}
                     >
                       <span
                         className={`${styles.dot} ${active ? styles.dotActive : styles.dotInactive}`}

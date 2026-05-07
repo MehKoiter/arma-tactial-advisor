@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { setSlugInUrl, setStoredPin } from '@/providers/RoomContext'
+import { getStoredPin, setSlugInUrl, setStoredPin } from '@/providers/RoomContext'
 import { RoomBrowser, type PublicRoom } from './RoomBrowser'
 import styles from './Landing.module.css'
 
@@ -108,10 +108,15 @@ export function Landing() {
   }
 
   function handlePickFromBrowser(room: PublicRoom) {
-    setJoinSlug(room.slug)
-    if (!room.has_pin) setJoinPin('')
-    setJoinError(null)
     setBrowserOpen(false)
+    if (!room.has_pin || getStoredPin(room.slug)) {
+      setSlugInUrl(room.slug)
+      return
+    }
+    // PIN-protected with no stored PIN — pre-fill form so user can enter it
+    setJoinSlug(room.slug)
+    setJoinPin('')
+    setJoinError(null)
   }
 
   return (
