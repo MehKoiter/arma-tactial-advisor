@@ -1,11 +1,12 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { usePositionNotes } from '@/hooks/usePositionNotes'
 import type { PositionNote, Rating } from '@/data/positionNotes'
+import type { VehicleType } from '@/state/ownershipReducer'
 
 interface PositionNotesContextValue {
   notes: PositionNote[]
   loaded: boolean
-  addNote: (lng: number, lat: number, rating: Rating, capId: string) => void
+  addNote: (lng: number, lat: number, rating: Rating, capId: string, vehicleType: VehicleType) => void
   removeNote: (uid: string) => void
   clearNotes: () => void
 }

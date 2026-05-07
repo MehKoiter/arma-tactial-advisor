@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { PositionNote, Rating } from '@/data/positionNotes'
+import type { VehicleType } from '@/state/ownershipReducer'
 import { supabase } from '@/lib/supabase'
 import { useRoom } from '@/providers/RoomContext'
 
@@ -7,6 +8,7 @@ import { useRoom } from '@/providers/RoomContext'
 interface NoteRow {
   uid: string
   cap_id: string
+  vehicle_type: VehicleType | null
   lng: number
   lat: number
   rating: number
@@ -14,7 +16,14 @@ interface NoteRow {
 }
 
 function rowToNote(r: NoteRow): PositionNote {
-  return { uid: r.uid, capId: r.cap_id, lng: r.lng, lat: r.lat, rating: r.rating as Rating }
+  return {
+    uid: r.uid,
+    capId: r.cap_id,
+    vehicleType: (r.vehicle_type ?? 'LAV') as VehicleType,
+    lng: r.lng,
+    lat: r.lat,
+    rating: r.rating as Rating,
+  }
 }
 
 let _uid = Date.now()
@@ -62,11 +71,11 @@ export function usePositionNotes() {
     return () => { supabase.removeChannel(channel) }
   }, [roomId])
 
-  const addNote = useCallback(async (lng: number, lat: number, rating: Rating, capId: string) => {
+  const addNote = useCallback(async (lng: number, lat: number, rating: Rating, capId: string, vehicleType: VehicleType) => {
     const uid = nextUid()
     // Optimistic update
-    setNotes((prev) => [...prev, { uid, capId, lng, lat, rating }])
-    await supabase.from('position_notes').insert({ uid, cap_id: capId, lng, lat, rating, room_id: roomId })
+    setNotes((prev) => [...prev, { uid, capId, vehicleType, lng, lat, rating }])
+    await supabase.from('position_notes').insert({ uid, cap_id: capId, vehicle_type: vehicleType, lng, lat, rating, room_id: roomId })
   }, [roomId])
 
   const removeNote = useCallback(async (uid: string) => {

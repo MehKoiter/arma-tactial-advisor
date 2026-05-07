@@ -1,9 +1,13 @@
 export type Rating = 1 | 2 | 3 | 4 | 5
 
+import type { VehicleType } from '@/state/ownershipReducer'
+
 export interface PositionNote {
   uid: string
   /** The CAP this position was rated relative to. */
   capId: string
+  /** Vehicle the note was placed for. Heatmap is filtered by current vehicle. */
+  vehicleType: VehicleType
   lng: number
   lat: number
   rating: Rating

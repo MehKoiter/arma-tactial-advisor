@@ -115,8 +115,8 @@ export function TacticalMap() {
 
   const handleRatePosition = useCallback((rating: Rating) => {
     if (!contextMenu || !selectedSuggestion) return
-    addNote(contextMenu.lng, contextMenu.lat, rating, selectedSuggestion.cap.id)
-  }, [contextMenu, selectedSuggestion, addNote])
+    addNote(contextMenu.lng, contextMenu.lat, rating, selectedSuggestion.cap.id, state.vehicleType)
+  }, [contextMenu, selectedSuggestion, addNote, state.vehicleType])
 
   const handleSetMob = useCallback((faction: MobFaction) => {
     if (!contextMenu) return
@@ -313,28 +313,28 @@ export function TacticalMap() {
     () => ({
       type: 'FeatureCollection' as const,
       features: notes
-        .filter((n) => n.capId === selectedSuggestion?.cap.id)
+        .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
         .map((n) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [n.lng, n.lat] },
           properties: { weight: (5 - n.rating) / 4 }, // rating 1 → 1.0, rating 5 → 0.0
         })),
     }),
-    [notes, selectedSuggestion],
+    [notes, selectedSuggestion, state.vehicleType],
   )
 
   const notesDesiredGeoJSON = useMemo(
     () => ({
       type: 'FeatureCollection' as const,
       features: notes
-        .filter((n) => n.capId === selectedSuggestion?.cap.id)
+        .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
         .map((n) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [n.lng, n.lat] },
           properties: { weight: (n.rating - 1) / 4 }, // rating 5 → 1.0, rating 1 → 0.0
         })),
     }),
-    [notes, selectedSuggestion],
+    [notes, selectedSuggestion, state.vehicleType],
   )
 
   return (
@@ -634,7 +634,7 @@ export function TacticalMap() {
 
         {/* Note dot markers — right-click to remove */}
         {showNotesHeatmap && notes
-          .filter((n) => n.capId === selectedSuggestion?.cap.id)
+          .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
           .map((n) => (
             <Marker key={n.uid} longitude={n.lng} latitude={n.lat} anchor="center">
               <div
