@@ -13,7 +13,6 @@ const OWNER_ORDER: Owner[] = ['neutral', 'US', 'RUS']
 interface CAPBadgeProps {
   capId: string
   name: string
-  shortName?: string
   owner: Owner
   isLavPosition: boolean
   isUnderAttack: boolean
@@ -28,7 +27,6 @@ interface CAPBadgeProps {
 function CAPBadgeInner({
   capId,
   name,
-  shortName,
   owner,
   isLavPosition,
   isUnderAttack,

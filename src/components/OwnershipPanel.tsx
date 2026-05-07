@@ -78,7 +78,6 @@ export function OwnershipPanel() {
                     key={cap.id}
                     capId={cap.id}
                     name={cap.name}
-                    shortName={cap.shortName}
                     owner={owner}
                     isLavPosition={state.lavPosition === cap.id}
                     isUnderAttack={state.underAttack.has(cap.id)}
