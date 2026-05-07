@@ -203,7 +203,7 @@ export function buildInitialOwnership(capIds: string[]): OwnershipState {
     ownership: Object.fromEntries(capIds.map((id) => [id, 'neutral' as Owner])),
     lavPosition: null,
     playerTeam: 'US',
-    vehicleType: 'LAV',
+    vehicleType: 'INFANTRY',
     underAttack: new Set(),
     attacking: new Set(),
     // Radios default ON for every CAP. Toggle off in the panel when one goes
