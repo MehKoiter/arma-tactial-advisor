@@ -15,8 +15,7 @@ export function Landing() {
   const [creating, setCreating] = useState(false)
   const [createName, setCreateName] = useState('')
   const [createPin, setCreatePin] = useState('')
-  const [createBmUs, setCreateBmUs] = useState('')
-  const [createBmRus, setCreateBmRus] = useState('')
+  const [createBm, setCreateBm] = useState('')
   const [createPublic, setCreatePublic] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
@@ -42,8 +41,8 @@ export function Landing() {
           const m = t.match(/(\d{4,})/)
           return m ? m[1] : null
         }
-        const battlemetrics_us_id = parseBm(createBmUs)
-        const battlemetrics_rus_id = parseBm(createBmRus)
+        const battlemetrics_us_id = parseBm(createBm)
+        const battlemetrics_rus_id = null
         const { error } = await supabase.from('rooms').insert({
           slug,
           pin,
@@ -140,20 +139,9 @@ export function Landing() {
             BattleMetrics server (optional)
             <input
               type="text"
-              value={createBmUs}
-              onChange={(e) => setCreateBmUs(e.target.value)}
-              placeholder="🇺🇸 US server — ID or URL"
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </label>
-          <label>
-            
-            <input
-              type="text"
-              value={createBmRus}
-              onChange={(e) => setCreateBmRus(e.target.value)}
-              placeholder="🇷🇺 RUS server — ID or URL"
+              value={createBm}
+              onChange={(e) => setCreateBm(e.target.value)}
+              placeholder="Server ID or URL"
               autoCapitalize="none"
               autoCorrect="off"
             />
