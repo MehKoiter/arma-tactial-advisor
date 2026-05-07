@@ -1,0 +1,16 @@
+name: Server Keepalive
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Touch server-linked rooms
+        run: |
+          curl --fail-with-body -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            "${{ secrets.VITE_SUPABASE_URL }}/functions/v1/server-keepalive"

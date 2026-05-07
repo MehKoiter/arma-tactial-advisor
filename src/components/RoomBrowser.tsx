@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import styles from './RoomBrowser.module.css'
 
-const ACTIVE_WINDOW_MS = 5 * 60 * 1000
+const ACTIVE_WINDOW_MS = 10 * 60 * 1000
 
 export interface PublicRoom {
   slug: string
