@@ -50,7 +50,7 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
         {OWNER_LABELS[owner]}
       </button>
       <span className={styles.capName}>{name.length <= 10 ? name : (shortName ?? name)}</span>
-      {isFriendly && (
+      {!isEnemy && (
         <button
           type="button"
           className={`${styles.attackBtn} ${isUnderAttack ? styles.attackActive : ''}`}

@@ -63,9 +63,10 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       const current: Owner = state.ownership[action.capId] ?? 'neutral'
       const next = cycleOwner(current)
       const enemy: Owner = state.playerTeam === 'US' ? 'RUS' : 'US'
-      // If the CAP is leaving friendly ownership, clear its under-attack flag
+      // Under-attack flag is valid for friendly OR neutral CAPs (contested/being captured).
+      // Clear it only when the CAP becomes enemy-owned.
       const ua = new Set(state.underAttack)
-      if (next !== state.playerTeam) ua.delete(action.capId)
+      if (next === enemy) ua.delete(action.capId)
       // If the CAP is leaving enemy ownership, clear its attacking flag
       const atk = new Set(state.attacking)
       if (next !== enemy) atk.delete(action.capId)
