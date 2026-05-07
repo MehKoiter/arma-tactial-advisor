@@ -15,25 +15,29 @@ import { Landing } from './components/Landing.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RoomProvider>
-      {(roomSlug) => roomSlug ? (
-        // key={roomSlug} forces a clean remount of all room-scoped providers
-        // when switching rooms, so state never leaks across rooms.
-        <OwnershipProvider key={roomSlug}>
-          <RoutingProvider>
-            <InputProviderProvider>
-              <PositionNotesProvider>
-                <IndicatorsProvider>
-                  <MobsProvider>
-                    <RecommendationProvider>
-                      <App />
-                    </RecommendationProvider>
-                  </MobsProvider>
-                </IndicatorsProvider>
-              </PositionNotesProvider>
-            </InputProviderProvider>
-          </RoutingProvider>
-        </OwnershipProvider>
-      ) : <Landing />}
+      {(roomSlug) =>
+        roomSlug ? (
+          // key={roomSlug} forces a clean remount of all room-scoped providers
+          // when switching rooms, so state never leaks across rooms.
+          <OwnershipProvider key={roomSlug}>
+            <RoutingProvider>
+              <InputProviderProvider>
+                <PositionNotesProvider>
+                  <IndicatorsProvider>
+                    <MobsProvider>
+                      <RecommendationProvider>
+                        <App />
+                      </RecommendationProvider>
+                    </MobsProvider>
+                  </IndicatorsProvider>
+                </PositionNotesProvider>
+              </InputProviderProvider>
+            </RoutingProvider>
+          </OwnershipProvider>
+        ) : (
+          <Landing />
+        )
+      }
     </RoomProvider>
   </StrictMode>,
 )

@@ -38,7 +38,9 @@
   font-size: 0.8rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .team-toggle strong {
@@ -109,9 +111,14 @@
   padding: 0.25rem 0.6rem;
 }
 
-.room-pill-slug strong { color: #66bb6a; font-weight: 600; }
+.room-pill-slug strong {
+  color: #66bb6a;
+  font-weight: 600;
+}
 
-.room-pill-slug:hover { background: #2a2a4a; }
+.room-pill-slug:hover {
+  background: #2a2a4a;
+}
 .room-pill-leave {
   border-left: 1px solid #2a2a4a;
   color: #9aa;
@@ -119,7 +126,10 @@
   font-size: 1rem;
   line-height: 1;
 }
-.room-pill-leave:hover { background: #2a1a1a; color: #ef5350; }
+.room-pill-leave:hover {
+  background: #2a1a1a;
+  color: #ef5350;
+}
 
 /* ── Recommendation panel resize ───────────────────────────────────────────── */
 .rec-panel-wrapper {
@@ -164,7 +174,9 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
   pointer-events: all;
 }
 
@@ -172,4 +184,3 @@
   background: var(--accent-dim);
   color: var(--accent);
 }
-

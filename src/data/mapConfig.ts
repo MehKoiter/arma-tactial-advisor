@@ -61,7 +61,12 @@ export const TILE_SOURCE = {
   tileSize: 256,
   minzoom: 10,
   maxzoom: 16,
-  bounds: [BOUNDS_LNG_MIN, BOUNDS_LAT_MIN, BOUNDS_LNG_MAX, BOUNDS_LAT_MAX] as [number, number, number, number],
+  bounds: [BOUNDS_LNG_MIN, BOUNDS_LAT_MIN, BOUNDS_LNG_MAX, BOUNDS_LAT_MAX] as [
+    number,
+    number,
+    number,
+    number,
+  ],
 } as const
 
 // Keep for reference / fallback — single-image source used before tile pipeline was set up

@@ -95,9 +95,7 @@ export function CalibrationPanel({ onActiveCAPChange, activeCAP, coords, onReset
           {copied ? 'Copied!' : 'Copy output'}
         </button>
       </div>
-      {coords.length > 0 && (
-        <pre className={styles.output}>{coordsToOutput(coords)}</pre>
-      )}
+      {coords.length > 0 && <pre className={styles.output}>{coordsToOutput(coords)}</pre>}
     </div>
   )
 }

@@ -53,7 +53,9 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
     setLoading(true)
     void supabase
       .from('public_rooms')
-      .select('slug, name, has_pin, battlemetrics_us_id, battlemetrics_rus_id, last_active_at, created_at')
+      .select(
+        'slug, name, has_pin, battlemetrics_us_id, battlemetrics_rus_id, last_active_at, created_at',
+      )
       .order('last_active_at', { ascending: false })
       .limit(200)
       .then(({ data, error }) => {
@@ -62,7 +64,9 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
         else setRooms((data ?? []) as PublicRoom[])
         setLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Realtime updates: refetch on any change to public rooms.
@@ -71,30 +75,30 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
   useEffect(() => {
     const channel = supabase
       .channel('public_rooms_browser')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'rooms' },
-        () => {
-          void supabase
-            .from('public_rooms')
-            .select('slug, name, has_pin, battlemetrics_us_id, battlemetrics_rus_id, last_active_at, created_at')
-            .order('last_active_at', { ascending: false })
-            .limit(200)
-            .then(({ data, error }) => {
-              if (error) return
-              setRooms((data ?? []) as PublicRoom[])
-            })
-        },
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, () => {
+        void supabase
+          .from('public_rooms')
+          .select(
+            'slug, name, has_pin, battlemetrics_us_id, battlemetrics_rus_id, last_active_at, created_at',
+          )
+          .order('last_active_at', { ascending: false })
+          .limit(200)
+          .then(({ data, error }) => {
+            if (error) return
+            setRooms((data ?? []) as PublicRoom[])
+          })
+      })
       .subscribe()
-    return () => { void supabase.removeChannel(channel) }
+    return () => {
+      void supabase.removeChannel(channel)
+    }
   }, [])
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase()
     if (!q) return rooms
-    return rooms.filter((r) =>
-      r.slug.toLowerCase().includes(q) || (r.name ?? '').toLowerCase().includes(q),
+    return rooms.filter(
+      (r) => r.slug.toLowerCase().includes(q) || (r.name ?? '').toLowerCase().includes(q),
     )
   }, [rooms, filter])
 
@@ -107,7 +111,9 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
       <div className={styles.modal}>
         <header className={styles.header}>
           <h2>Browse public rooms</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
+            ×
+          </button>
         </header>
 
         <input
@@ -145,19 +151,17 @@ export function RoomBrowser({ onPick, onClose }: RoomBrowserProps) {
                         aria-hidden
                       />
                       <span className={styles.nameCol}>
-                        <span className={styles.name}>
-                          {room.name?.trim() || room.slug}
-                        </span>
-                        {room.name?.trim() && (
-                          <span className={styles.slug}>{room.slug}</span>
-                        )}
+                        <span className={styles.name}>{room.name?.trim() || room.slug}</span>
+                        {room.name?.trim() && <span className={styles.slug}>{room.slug}</span>}
                       </span>
                       <span className={styles.flags}>
                         {room.battlemetrics_us_id && <span title="US server set">🇺🇸</span>}
                         {room.battlemetrics_rus_id && <span title="RUS server set">🇷🇺</span>}
                       </span>
                       <span className={styles.lock}>{room.has_pin ? '🔒' : ''}</span>
-                      <span className={styles.time}>{formatRelative(room.last_active_at, now)}</span>
+                      <span className={styles.time}>
+                        {formatRelative(room.last_active_at, now)}
+                      </span>
                     </button>
                   </li>
                 )

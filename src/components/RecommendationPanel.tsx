@@ -4,22 +4,41 @@ import { INDICATOR_CATEGORIES, INDICATOR_TYPES } from '@/data/indicators'
 import styles from './RecommendationPanel.module.css'
 
 const VEHICLE_HINTS: Record<string, string> = {
-  LAV:            'Set LAV position (▲) to enable route scoring.',
-  ATTACK_HELO:    'Set spawn position (▲) to enable range scoring.',
+  LAV: 'Set LAV position (▲) to enable route scoring.',
+  ATTACK_HELO: 'Set spawn position (▲) to enable range scoring.',
   TRANSPORT_HELO: 'Set spawn position (▲) to enable range scoring.',
-  INFANTRY:       'Set squad position (▲) to enable on-foot range scoring.',
+  INFANTRY: 'Set squad position (▲) to enable on-foot range scoring.',
 }
 
 const EMPTY_MESSAGES: Record<string, { primary: string; secondary: string }> = {
-  LAV:            { primary: 'No friendly CAPs. Mark some CAPs as friendly.', secondary: 'No frontline targets. Ensure friendly CAPs border enemy territory.' },
-  ATTACK_HELO:    { primary: 'No enemy targets. Mark some CAPs as enemy.', secondary: '' },
-  TRANSPORT_HELO: { primary: 'No friendly CAPs to resupply. Mark some CAPs as friendly.', secondary: 'No active assaults. Mark enemy CAPs as being attacked (⚔) to see reinforce targets.' },
-  INFANTRY:       { primary: 'No friendly CAPs to garrison. Mark some CAPs as friendly.', secondary: 'No targets in foot range. Move closer to a contested or neutral CAP.' },
+  LAV: {
+    primary: 'No friendly CAPs. Mark some CAPs as friendly.',
+    secondary: 'No frontline targets. Ensure friendly CAPs border enemy territory.',
+  },
+  ATTACK_HELO: { primary: 'No enemy targets. Mark some CAPs as enemy.', secondary: '' },
+  TRANSPORT_HELO: {
+    primary: 'No friendly CAPs to resupply. Mark some CAPs as friendly.',
+    secondary:
+      'No active assaults. Mark enemy CAPs as being attacked (⚔) to see reinforce targets.',
+  },
+  INFANTRY: {
+    primary: 'No friendly CAPs to garrison. Mark some CAPs as friendly.',
+    secondary: 'No targets in foot range. Move closer to a contested or neutral CAP.',
+  },
 }
 
 export function RecommendationPanel() {
   const { state } = useOwnership()
-  const { tab, setTab, primaryList, secondaryList, primaryLabel, secondaryLabel, showSupplies, setShowSupplies } = useRecommendation()
+  const {
+    tab,
+    setTab,
+    primaryList,
+    secondaryList,
+    primaryLabel,
+    secondaryLabel,
+    showSupplies,
+    setShowSupplies,
+  } = useRecommendation()
   const { vehicleType } = state
 
   const isSecondaryTab = tab === 'secondary'
@@ -54,12 +73,8 @@ export function RecommendationPanel() {
         )}
       </div>
 
-      {!state.lavPosition && (
-        <p className={styles.hint}>{VEHICLE_HINTS[vehicleType]}</p>
-      )}
-      {activeList.length === 0 && emptyMsg && (
-        <p className={styles.empty}>{emptyMsg}</p>
-      )}
+      {!state.lavPosition && <p className={styles.hint}>{VEHICLE_HINTS[vehicleType]}</p>}
+      {activeList.length === 0 && emptyMsg && <p className={styles.empty}>{emptyMsg}</p>}
 
       <ol className={styles.list}>
         {activeList.map((s, i) => (
@@ -69,7 +84,9 @@ export function RecommendationPanel() {
               <div className={styles.capName}>{s.cap.name}</div>
               <div className={scoreStyle}>{s.totalScore.toFixed(2)}</div>
               <ul className={styles.rationale}>
-                {s.rationale.map((r, j) => <li key={j}>{r}</li>)}
+                {s.rationale.map((r, j) => (
+                  <li key={j}>{r}</li>
+                ))}
               </ul>
             </div>
           </li>
@@ -92,7 +109,11 @@ export function RecommendationPanel() {
           <div key={cat.id} className={styles.indicatorKeyCat}>
             <div className={styles.indicatorKeyCatLabel}>{cat.label}</div>
             {INDICATOR_TYPES.filter((t) => t.category === cat.id).map((t) => (
-              <div key={t.id} className={styles.indicatorKeyRow} style={{ '--ind-color': t.color } as React.CSSProperties}>
+              <div
+                key={t.id}
+                className={styles.indicatorKeyRow}
+                style={{ '--ind-color': t.color } as React.CSSProperties}
+              >
                 <span className={styles.indicatorKeyIcon}>{t.icon}</span>
                 <span className={styles.indicatorKeyLabel}>{t.label}</span>
               </div>

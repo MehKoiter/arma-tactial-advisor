@@ -152,7 +152,8 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
         ownership[row.cap_id] = row.owner
         if (row.under_attack) ua.add(row.cap_id)
         if (row.attacking) atk.add(row.cap_id)
-        if (row.radio) r.add(row.cap_id); else r.delete(row.cap_id)
+        if (row.radio) r.add(row.cap_id)
+        else r.delete(row.cap_id)
         if (row.is_hq) hq.add(row.cap_id)
       }
       return { ...state, ownership, underAttack: ua, attacking: atk, radio: r, hq }
@@ -180,10 +181,14 @@ export function ownershipReducer(state: OwnershipState, action: OwnershipAction)
       const atk = new Set(state.attacking)
       const r = new Set(state.radio)
       const hq = new Set(state.hq)
-      if (under_attack) ua.add(cap_id); else ua.delete(cap_id)
-      if (attacking) atk.add(cap_id); else atk.delete(cap_id)
-      if (radio) r.add(cap_id); else r.delete(cap_id)
-      if (is_hq) hq.add(cap_id); else hq.delete(cap_id)
+      if (under_attack) ua.add(cap_id)
+      else ua.delete(cap_id)
+      if (attacking) atk.add(cap_id)
+      else atk.delete(cap_id)
+      if (radio) r.add(cap_id)
+      else r.delete(cap_id)
+      if (is_hq) hq.add(cap_id)
+      else hq.delete(cap_id)
       return {
         ...state,
         ownership: { ...state.ownership, [cap_id]: owner },

@@ -6,7 +6,13 @@ import type { VehicleType } from '@/state/ownershipReducer'
 interface PositionNotesContextValue {
   notes: PositionNote[]
   loaded: boolean
-  addNote: (lng: number, lat: number, rating: Rating, capId: string, vehicleType: VehicleType) => void
+  addNote: (
+    lng: number,
+    lat: number,
+    rating: Rating,
+    capId: string,
+    vehicleType: VehicleType,
+  ) => void
   removeNote: (uid: string) => void
   clearNotes: () => void
 }

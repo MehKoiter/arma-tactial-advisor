@@ -57,7 +57,10 @@ export function findArticulationPoints(
   const adj = new Map<string, string[]>()
   for (const c of caps) {
     if (!nodes.has(c.id)) continue
-    adj.set(c.id, c.neighbors.filter((n) => nodes.has(n)))
+    adj.set(
+      c.id,
+      c.neighbors.filter((n) => nodes.has(n)),
+    )
   }
 
   const articulation = new Set<string>()

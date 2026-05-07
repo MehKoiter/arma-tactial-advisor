@@ -82,10 +82,19 @@ export function Landing() {
         .select('slug, pin')
         .eq('slug', slug)
         .maybeSingle()
-      if (error) { setJoinError(error.message); return }
-      if (!data) { setJoinError('Room not found'); return }
+      if (error) {
+        setJoinError(error.message)
+        return
+      }
+      if (!data) {
+        setJoinError('Room not found')
+        return
+      }
       if (data.pin) {
-        if (joinPin.trim() !== data.pin) { setJoinError('Wrong PIN'); return }
+        if (joinPin.trim() !== data.pin) {
+          setJoinError('Wrong PIN')
+          return
+        }
         setStoredPin(slug, data.pin)
       }
       setSlugInUrl(slug)
@@ -108,12 +117,17 @@ export function Landing() {
   return (
     <div className={styles.landing}>
       <h1 className={styles.title}>Arma Reforger Tactical Advisor</h1>
-      <p className={styles.subtitle}>Create or join a room to share a map with friends in realtime.</p>
+      <p className={styles.subtitle}>
+        Create or join a room to share a map with friends in realtime.
+      </p>
 
       <div className={styles.cards}>
         <div className={styles.card}>
           <h2>Create a new room</h2>
-          <p>Generates a random code that you can share. Set an optional 4-digit PIN for light protection.</p>
+          <p>
+            Generates a random code that you can share. Set an optional 4-digit PIN for light
+            protection.
+          </p>
           <label>
             Room name (optional)
             <input
@@ -162,7 +176,9 @@ export function Landing() {
 
         <div className={styles.card}>
           <h2>Join an existing room</h2>
-          <p>Enter the room code your friend shared. PIN is required only if the room is protected.</p>
+          <p>
+            Enter the room code your friend shared. PIN is required only if the room is protected.
+          </p>
           <label>
             Room code
             <input
@@ -188,14 +204,22 @@ export function Landing() {
           <button onClick={handleJoin} disabled={joining}>
             {joining ? 'Joining…' : 'Join room'}
           </button>
-          <button type="button" onClick={() => setBrowserOpen(true)} className={styles.secondaryBtn}>
+          <button
+            type="button"
+            onClick={() => setBrowserOpen(true)}
+            className={styles.secondaryBtn}
+          >
             Browse public rooms
           </button>
         </div>
       </div>
 
       <p className={styles.publicLink}>
-        Or <a onClick={joinPublic} style={{ cursor: 'pointer' }}>jump into the public room</a>.
+        Or{' '}
+        <a onClick={joinPublic} style={{ cursor: 'pointer' }}>
+          jump into the public room
+        </a>
+        .
       </p>
 
       {browserOpen && (

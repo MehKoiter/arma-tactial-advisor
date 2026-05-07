@@ -26,7 +26,10 @@ export interface MobAnchor {
   lat: number
 }
 
-function distanceM(a: { coords: { lng: number; lat: number } }, b: { coords: { lng: number; lat: number } }): number {
+function distanceM(
+  a: { coords: { lng: number; lat: number } },
+  b: { coords: { lng: number; lat: number } },
+): number {
   const dx = (a.coords.lng - b.coords.lng) * METRES_PER_DEGREE
   const dy = (a.coords.lat - b.coords.lat) * METRES_PER_DEGREE
   return Math.hypot(dx, dy)

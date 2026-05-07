@@ -16,16 +16,16 @@ const DEFAULT_WIDTH = 240
 
 const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }[]> = {
   US: [
-    { type: 'LAV',             label: '🚗 LAV-25' },
-    { type: 'ATTACK_HELO',    label: '🚁 AH-1Z Viper' },
+    { type: 'LAV', label: '🚗 LAV-25' },
+    { type: 'ATTACK_HELO', label: '🚁 AH-1Z Viper' },
     { type: 'TRANSPORT_HELO', label: '🚁 UH-1Y Venom' },
-    { type: 'INFANTRY',       label: '🪖 Rifleman' },
+    { type: 'INFANTRY', label: '🪖 Rifleman' },
   ],
   RUS: [
-    { type: 'LAV',             label: '🚗 BTR-82A' },
-    { type: 'ATTACK_HELO',    label: '🚁 Mi-24 Hind' },
+    { type: 'LAV', label: '🚗 BTR-82A' },
+    { type: 'ATTACK_HELO', label: '🚁 Mi-24 Hind' },
     { type: 'TRANSPORT_HELO', label: '🚁 Mi-8 Hip' },
-    { type: 'INFANTRY',       label: '🪖 Rifleman' },
+    { type: 'INFANTRY', label: '🪖 Rifleman' },
   ],
 }
 
@@ -38,8 +38,8 @@ function App() {
     const saved = localStorage.getItem(REC_WIDTH_KEY)
     return saved ? Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Number(saved))) : DEFAULT_WIDTH
   })
-  const [collapsed, setCollapsed] = useState<boolean>(() =>
-    localStorage.getItem(REC_COLLAPSED_KEY) === 'true'
+  const [collapsed, setCollapsed] = useState<boolean>(
+    () => localStorage.getItem(REC_COLLAPSED_KEY) === 'true',
   )
   const panelWidthRef = useRef(panelWidth)
   panelWidthRef.current = panelWidth
@@ -91,12 +91,16 @@ function App() {
           >
             Room: <strong>{roomSlug}</strong>
           </button>
-          <button className="room-pill-leave" onClick={leaveRoom} title="Leave room">×</button>
+          <button className="room-pill-leave" onClick={leaveRoom} title="Leave room">
+            ×
+          </button>
         </span>
         <ServerStatusPill />
         <button
           className={`team-toggle team-toggle--${playerTeam.toLowerCase()}`}
-          onClick={() => dispatch({ type: 'SET_PLAYER_TEAM', team: playerTeam === 'US' ? 'RUS' : 'US' })}
+          onClick={() =>
+            dispatch({ type: 'SET_PLAYER_TEAM', team: playerTeam === 'US' ? 'RUS' : 'US' })
+          }
           title="Switch player team"
         >
           Playing as: <strong>{playerTeam}</strong>
@@ -104,11 +108,15 @@ function App() {
         <select
           className="vehicle-select"
           value={vehicleType}
-          onChange={(e) => dispatch({ type: 'SET_VEHICLE_TYPE', vehicleType: e.target.value as VehicleType })}
+          onChange={(e) =>
+            dispatch({ type: 'SET_VEHICLE_TYPE', vehicleType: e.target.value as VehicleType })
+          }
           aria-label="Select vehicle"
         >
           {VEHICLE_OPTIONS[playerTeam].map((v) => (
-            <option key={v.type} value={v.type}>{v.label}</option>
+            <option key={v.type} value={v.type}>
+              {v.label}
+            </option>
           ))}
         </select>
       </header>
@@ -125,10 +133,7 @@ function App() {
             {collapsed ? '◀' : '▶'}
           </button>
         </div>
-        <div
-          className="rec-panel-wrapper"
-          style={{ width: collapsed ? 0 : panelWidth }}
-        >
+        <div className="rec-panel-wrapper" style={{ width: collapsed ? 0 : panelWidth }}>
           <RecommendationPanel />
         </div>
       </main>

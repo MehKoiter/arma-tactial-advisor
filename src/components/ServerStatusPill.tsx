@@ -34,7 +34,9 @@ export function ServerStatusPill() {
     setEditing(false)
   }
 
-  function cancel() { setEditing(false) }
+  function cancel() {
+    setEditing(false)
+  }
 
   if (editing) {
     return (
@@ -46,7 +48,10 @@ export function ServerStatusPill() {
           placeholder="US BM ID or URL"
           value={draftUs}
           onChange={(e) => setDraftUs(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') void save(); if (e.key === 'Escape') cancel() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void save()
+            if (e.key === 'Escape') cancel()
+          }}
         />
         <span className={styles.flag}>🇷🇺</span>
         <input
@@ -55,10 +60,17 @@ export function ServerStatusPill() {
           placeholder="RUS BM ID or URL"
           value={draftRus}
           onChange={(e) => setDraftRus(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') void save(); if (e.key === 'Escape') cancel() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void save()
+            if (e.key === 'Escape') cancel()
+          }}
         />
-        <button type="button" className={styles.btn} onClick={save}>Save</button>
-        <button type="button" className={styles.btnGhost} onClick={cancel}>Cancel</button>
+        <button type="button" className={styles.btn} onClick={save}>
+          Save
+        </button>
+        <button type="button" className={styles.btnGhost} onClick={cancel}>
+          Cancel
+        </button>
       </div>
     )
   }
@@ -67,7 +79,12 @@ export function ServerStatusPill() {
   if (!room.battlemetricsUsId && !room.battlemetricsRusId) {
     return (
       <div className={styles.pillEdit}>
-        <button type="button" className={styles.btnGhost} onClick={startEdit} title="Link BattleMetrics servers">
+        <button
+          type="button"
+          className={styles.btnGhost}
+          onClick={startEdit}
+          title="Link BattleMetrics servers"
+        >
           Link servers
         </button>
       </div>
@@ -88,20 +105,22 @@ export function ServerStatusPill() {
   const mapNames = new Set<string>()
   const tooltipParts: string[] = []
   for (const s of linked) {
-    if (!s.status.status) { anyLoading = true; continue }
+    if (!s.status.status) {
+      anyLoading = true
+      continue
+    }
     totalPlayers += s.status.status.players
     totalMax += s.status.status.maxPlayers
     if (s.status.status.status === 'online') anyOnline = true
-    else if (s.status.status.status === 'offline' || s.status.status.status === 'dead') anyOffline = true
+    else if (s.status.status.status === 'offline' || s.status.status.status === 'dead')
+      anyOffline = true
     if (s.status.status.mapName) mapNames.add(s.status.status.mapName)
-    tooltipParts.push(`${s.faction}: ${s.status.status.name} (${s.status.status.players}/${s.status.status.maxPlayers})`)
+    tooltipParts.push(
+      `${s.faction}: ${s.status.status.name} (${s.status.status.players}/${s.status.status.maxPlayers})`,
+    )
   }
 
-  const dotClass = anyOnline
-    ? styles.dotOnline
-    : anyOffline
-      ? styles.dotOffline
-      : styles.dotUnknown
+  const dotClass = anyOnline ? styles.dotOnline : anyOffline ? styles.dotOffline : styles.dotUnknown
 
   const flags = linked.map((s) => s.flag).join('')
   const mapLabel = mapNames.size > 0 ? Array.from(mapNames).join(' / ') : ''
@@ -115,12 +134,21 @@ export function ServerStatusPill() {
           <>loading…</>
         ) : (
           <>
-            <strong>{totalPlayers}/{totalMax}</strong>
+            <strong>
+              {totalPlayers}/{totalMax}
+            </strong>
             {mapLabel ? <> · {mapLabel}</> : null}
           </>
         )}
       </span>
-      <button type="button" className={styles.editBtn} onClick={startEdit} title="Edit linked servers">⚙</button>
+      <button
+        type="button"
+        className={styles.editBtn}
+        onClick={startEdit}
+        title="Edit linked servers"
+      >
+        ⚙
+      </button>
     </div>
   )
 }
@@ -136,16 +164,25 @@ export function ServerRestartBanner() {
   if (rus.restarted) restarted.push({ faction: 'RUS', flag: '🇷🇺', ack: rus.acknowledgeRestart })
   if (restarted.length === 0) return null
 
-  function dismissAll() { restarted.forEach((r) => r.ack()) }
-  function resetAll() { dispatch({ type: 'RESET_ALL' }); dismissAll() }
+  function dismissAll() {
+    restarted.forEach((r) => r.ack())
+  }
+  function resetAll() {
+    dispatch({ type: 'RESET_ALL' })
+    dismissAll()
+  }
 
   const label = restarted.map((r) => r.flag + ' ' + r.faction).join(' + ')
 
   return (
     <div className={styles.restartBanner} role="alertdialog" aria-label="Server restarted">
       <span>🔄 Server restart detected ({label}). Reset all CAP ownership?</span>
-      <button type="button" className={styles.btn} onClick={resetAll}>Reset all</button>
-      <button type="button" className={styles.btnGhost} onClick={dismissAll}>Dismiss</button>
+      <button type="button" className={styles.btn} onClick={resetAll}>
+        Reset all
+      </button>
+      <button type="button" className={styles.btnGhost} onClick={dismissAll}>
+        Dismiss
+      </button>
     </div>
   )
 }

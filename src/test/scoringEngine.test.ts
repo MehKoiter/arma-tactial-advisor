@@ -14,8 +14,20 @@ import type { OwnershipState } from '@/state/ownershipReducer'
 // Minimal 4-node graph: A - B - C - D
 const CAPS: CAP[] = [
   { id: 'A', name: 'Alpha', coords: { lat: 16, lng: -18 }, neighbors: ['B'], type: 'minor' },
-  { id: 'B', name: 'Bravo', coords: { lat: 16.01, lng: -18 }, neighbors: ['A', 'C'], type: 'minor' },
-  { id: 'C', name: 'Charlie', coords: { lat: 16.02, lng: -18 }, neighbors: ['B', 'D'], type: 'minor' },
+  {
+    id: 'B',
+    name: 'Bravo',
+    coords: { lat: 16.01, lng: -18 },
+    neighbors: ['A', 'C'],
+    type: 'minor',
+  },
+  {
+    id: 'C',
+    name: 'Charlie',
+    coords: { lat: 16.02, lng: -18 },
+    neighbors: ['B', 'D'],
+    type: 'minor',
+  },
   { id: 'D', name: 'Delta', coords: { lat: 16.03, lng: -18 }, neighbors: ['C'], type: 'minor' },
 ]
 

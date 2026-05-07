@@ -43,8 +43,13 @@
   cursor: pointer;
 }
 
-.resetBtn:hover:not(:disabled) { background: #3a3a4a; }
-.resetBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.resetBtn:hover:not(:disabled) {
+  background: #3a3a4a;
+}
+.resetBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .providerRow {
   display: flex;
@@ -78,7 +83,9 @@
 }
 
 @keyframes blink {
-  50% { opacity: 0.3; }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .grid {
@@ -99,9 +106,15 @@
   padding-left: 8px;
 }
 
-.groupFriendly { border-left-color: #42a5f5; }
-.groupEnemy    { border-left-color: #ef5350; }
-.groupNeutral  { border-left-color: #78909c; }
+.groupFriendly {
+  border-left-color: #42a5f5;
+}
+.groupEnemy {
+  border-left-color: #ef5350;
+}
+.groupNeutral {
+  border-left-color: #78909c;
+}
 
 .groupHeader {
   margin: 0 0 6px;

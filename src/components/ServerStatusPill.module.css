@@ -86,8 +86,14 @@
   color: #aaa;
 }
 
-.btn:hover { background: rgba(66, 165, 245, 0.35); color: #fff; }
-.btnGhost:hover { color: #fff; border-color: rgba(255, 255, 255, 0.4); }
+.btn:hover {
+  background: rgba(66, 165, 245, 0.35);
+  color: #fff;
+}
+.btnGhost:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
 
 .restartBanner {
   position: fixed;

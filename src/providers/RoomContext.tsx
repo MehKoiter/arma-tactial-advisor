@@ -47,14 +47,20 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
   const [rusId, setRusId] = useState<string | null>(null)
 
   useEffect(() => {
-    function onPop() { setSlug(readSlugFromUrl()) }
+    function onPop() {
+      setSlug(readSlugFromUrl())
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
   // Load IDs when slug changes
   useEffect(() => {
-    if (!slug) { setUsId(null); setRusId(null); return }
+    if (!slug) {
+      setUsId(null)
+      setRusId(null)
+      return
+    }
     let cancelled = false
     void supabase
       .from('rooms')
@@ -70,7 +76,9 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
         setUsId((data?.battlemetrics_us_id as string | null) ?? null)
         setRusId((data?.battlemetrics_rus_id as string | null) ?? null)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [slug])
 
   // Realtime: pick up edits from other clients
@@ -82,20 +90,28 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `slug=eq.${slug}` },
         (payload) => {
-          const row = payload.new as { battlemetrics_us_id?: string | null; battlemetrics_rus_id?: string | null }
+          const row = payload.new as {
+            battlemetrics_us_id?: string | null
+            battlemetrics_rus_id?: string | null
+          }
           setUsId(row.battlemetrics_us_id ?? null)
           setRusId(row.battlemetrics_rus_id ?? null)
         },
       )
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [slug])
 
   // Keep room alive
   useEffect(() => {
     if (!slug) return
     const touch = () => {
-      void supabase.from('rooms').update({ last_active_at: new Date().toISOString() }).eq('slug', slug)
+      void supabase
+        .from('rooms')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('slug', slug)
     }
     touch()
     const id = window.setInterval(touch, 60_000)
@@ -111,7 +127,8 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
       setBattlemetricsId: async (faction: ServerFaction, id: string | null) => {
         const trimmed = id && id.trim() ? id.trim() : null
         const column = faction === 'US' ? 'battlemetrics_us_id' : 'battlemetrics_rus_id'
-        if (faction === 'US') setUsId(trimmed); else setRusId(trimmed)
+        if (faction === 'US') setUsId(trimmed)
+        else setRusId(trimmed)
         const { error } = await supabase
           .from('rooms')
           .update({ [column]: trimmed })
@@ -122,11 +139,7 @@ export function RoomProvider({ children }: { children: (slug: string | null) => 
     }
   }, [slug, usId, rusId])
 
-  return (
-    <RoomContext value={value}>
-      {children(slug)}
-    </RoomContext>
-  )
+  return <RoomContext value={value}>{children(slug)}</RoomContext>
 }
 
 export function useRoom(): RoomContextValue {

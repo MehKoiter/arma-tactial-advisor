@@ -31,7 +31,9 @@
 }
 
 @media (max-width: 600px) {
-  .cards { grid-template-columns: 1fr; }
+  .cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
@@ -87,7 +89,9 @@
   padding: 0.55rem 0.8rem;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.1s, border-color 0.1s;
+  transition:
+    background 0.1s,
+    border-color 0.1s;
 }
 
 .card button:hover:not(:disabled) {
@@ -117,7 +121,9 @@
   text-decoration: none;
 }
 
-.publicLink a:hover { text-decoration: underline; }
+.publicLink a:hover {
+  text-decoration: underline;
+}
 
 .checkboxRow {
   flex-direction: row;
@@ -126,7 +132,7 @@
   cursor: pointer;
 }
 
-.checkboxRow input[type="checkbox"] {
+.checkboxRow input[type='checkbox'] {
   width: 1rem;
   height: 1rem;
   margin: 0;

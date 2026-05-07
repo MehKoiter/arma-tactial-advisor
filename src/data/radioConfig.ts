@@ -166,7 +166,7 @@ export function computeAttackProjectionLines(
 
   const out: AttackProjectionLine[] = []
   for (const e of enemies) {
-    let best: { anchor: typeof anchors[number]; d: number } | null = null
+    let best: { anchor: (typeof anchors)[number]; d: number } | null = null
     for (const a of anchors) {
       const dx = (e.coords.lng - a.lng) * METRES_PER_DEGREE
       const dy = (e.coords.lat - a.lat) * METRES_PER_DEGREE

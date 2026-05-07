@@ -67,7 +67,9 @@
   font-size: 0.9rem;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .rangefinderLockBtn:hover {
@@ -93,7 +95,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.1s, background 0.1s;
+  transition:
+    transform 0.1s,
+    background 0.1s;
   padding: 0;
   line-height: 1;
 }
@@ -134,7 +138,10 @@
   padding: 2px 8px;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .notesHeatmapBtn:hover {
@@ -182,8 +189,6 @@
   white-space: nowrap;
 }
 
-
-
 .mapImageHint {
   position: absolute;
   top: 8px;
@@ -216,9 +221,18 @@
 }
 
 @keyframes pulseRing {
-  0%   { transform: scale(1);    opacity: 0.9; }
-  70%  { transform: scale(1.5);  opacity: 0; }
-  100% { transform: scale(1.5);  opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 /* Under-attack badge on map marker (top-right corner) */
@@ -230,12 +244,17 @@
   line-height: 1;
   pointer-events: none;
   animation: flashAttackMap 0.9s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(255,82,82,0.8));
+  filter: drop-shadow(0 0 3px rgba(255, 82, 82, 0.8));
 }
 
 @keyframes flashAttackMap {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* Attacking pulse ring on enemy map markers */
@@ -249,9 +268,18 @@
 }
 
 @keyframes pulseAttacking {
-  0%   { transform: scale(1);    opacity: 0.9; }
-  70%  { transform: scale(1.5);  opacity: 0; }
-  100% { transform: scale(1.5);  opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 /* Attacking badge on enemy map marker (top-left corner) */
@@ -263,12 +291,17 @@
   line-height: 1;
   pointer-events: none;
   animation: flashAttackingMap 0.9s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(102,187,106,0.8));
+  filter: drop-shadow(0 0 3px rgba(102, 187, 106, 0.8));
 }
 
 @keyframes flashAttackingMap {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .capMarker {
@@ -278,7 +311,7 @@
   justify-content: center;
   border-radius: 50%;
   border: 2px solid #666;
-  background: rgba(30,30,46,0.85);
+  background: rgba(30, 30, 46, 0.85);
   cursor: default;
   font-weight: 700;
   color: #eee;
@@ -336,10 +369,10 @@
   font-weight: 600;
   color: #ddd;
   text-shadow:
-    -1px -1px 0 rgba(0,0,0,0.85),
-     1px -1px 0 rgba(0,0,0,0.85),
-    -1px  1px 0 rgba(0,0,0,0.85),
-     1px  1px 0 rgba(0,0,0,0.85);
+    -1px -1px 0 rgba(0, 0, 0, 0.85),
+    1px -1px 0 rgba(0, 0, 0, 0.85),
+    -1px 1px 0 rgba(0, 0, 0, 0.85),
+    1px 1px 0 rgba(0, 0, 0, 0.85);
   pointer-events: none;
   user-select: none;
   letter-spacing: 0.02em;
@@ -361,7 +394,9 @@
   width: 28px;
   height: 28px;
   cursor: pointer;
-  transition: transform 0.1s, background 0.1s;
+  transition:
+    transform 0.1s,
+    background 0.1s;
   padding: 0;
 }
 
@@ -399,7 +434,9 @@
   font-size: 1.3rem;
   font-weight: 800;
   line-height: 1;
-  box-shadow: 0 0 12px var(--mob-color, #42a5f5), 0 2px 8px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 0 12px var(--mob-color, #42a5f5),
+    0 2px 8px rgba(0, 0, 0, 0.6);
   text-shadow: 0 0 4px var(--mob-color, #42a5f5);
 }
 
@@ -429,7 +466,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  background: rgba(20,20,35,0.92);
+  background: rgba(20, 20, 35, 0.92);
   border: 2px solid var(--accent);
   border-radius: 6px;
   padding: 3px 6px;
@@ -437,10 +474,13 @@
   font-weight: 800;
   color: var(--accent);
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
 }
 
-.suggestionMarker:hover, .suggestionMarker.selected {
+.suggestionMarker:hover,
+.suggestionMarker.selected {
   background: var(--accent-surface);
   transform: scale(1.1);
 }
@@ -466,7 +506,7 @@
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255,152,0,0.9);
+  background: rgba(255, 152, 0, 0.9);
   color: #111;
   font-size: 0.72rem;
   font-weight: 600;
@@ -481,7 +521,7 @@
   font-size: 1rem;
   line-height: 1;
   cursor: default;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
   transition: transform 0.1s;
   user-select: none;
 }
@@ -492,9 +532,9 @@
   height: 10px;
   border-radius: 50%;
   background: var(--note-color, #aaa);
-  border: 1.5px solid rgba(255,255,255,0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   cursor: context-menu;
-  box-shadow: 0 0 4px rgba(0,0,0,0.7);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
   transition: transform 0.1s;
 }
 
@@ -508,7 +548,7 @@
   bottom: 16px;
   right: 16px;
   width: 280px;
-  background: rgba(18,18,30,0.97);
+  background: rgba(18, 18, 30, 0.97);
   border: 1px solid #3a3a5a;
   border-radius: 8px;
   padding: 12px;
@@ -541,7 +581,9 @@
   line-height: 1;
 }
 
-.closeBtn:hover { color: #fff; }
+.closeBtn:hover {
+  color: #fff;
+}
 
 .rationaleList {
   margin: 0 0 8px 16px;
@@ -558,5 +600,11 @@
   font-size: 0.72rem;
 }
 
-.factorGrid dt { color: #888; }
-.factorGrid dd { margin: 0; text-align: right; color: #e0e0e0; }
+.factorGrid dt {
+  color: #888;
+}
+.factorGrid dd {
+  margin: 0;
+  text-align: right;
+  color: #e0e0e0;
+}

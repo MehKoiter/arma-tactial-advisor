@@ -69,25 +69,33 @@ export function useMobs(): MobsState {
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [roomId])
 
-  const setMob = useCallback(async (faction: MobFaction, lng: number, lat: number) => {
-    // Optimistic
-    setMobs((prev) => ({ ...prev, [faction]: { faction, lng, lat } }))
-    await supabase
-      .from('mobs')
-      .upsert({ room_id: roomId, faction, lng, lat }, { onConflict: 'room_id,faction' })
-  }, [roomId])
+  const setMob = useCallback(
+    async (faction: MobFaction, lng: number, lat: number) => {
+      // Optimistic
+      setMobs((prev) => ({ ...prev, [faction]: { faction, lng, lat } }))
+      await supabase
+        .from('mobs')
+        .upsert({ room_id: roomId, faction, lng, lat }, { onConflict: 'room_id,faction' })
+    },
+    [roomId],
+  )
 
-  const clearMob = useCallback(async (faction: MobFaction) => {
-    setMobs((prev) => {
-      const next = { ...prev }
-      delete next[faction]
-      return next
-    })
-    await supabase.from('mobs').delete().eq('room_id', roomId).eq('faction', faction)
-  }, [roomId])
+  const clearMob = useCallback(
+    async (faction: MobFaction) => {
+      setMobs((prev) => {
+        const next = { ...prev }
+        delete next[faction]
+        return next
+      })
+      await supabase.from('mobs').delete().eq('room_id', roomId).eq('faction', faction)
+    },
+    [roomId],
+  )
 
   return { mobs, loaded, setMob, clearMob }
 }

@@ -23,11 +23,16 @@ describe('ownershipReducer', () => {
 
   it('CYCLE_OWNER: neutral → US, then US ↔ RUS (never back to neutral)', () => {
     let state = fresh()
-    const cycle = (s: OwnershipState) => ownershipReducer(s, { type: 'CYCLE_OWNER', capId: 'CAP_A' })
-    state = cycle(state); expect(state.ownership['CAP_A']).toBe('US')
-    state = cycle(state); expect(state.ownership['CAP_A']).toBe('RUS')
-    state = cycle(state); expect(state.ownership['CAP_A']).toBe('US')
-    state = cycle(state); expect(state.ownership['CAP_A']).toBe('RUS')
+    const cycle = (s: OwnershipState) =>
+      ownershipReducer(s, { type: 'CYCLE_OWNER', capId: 'CAP_A' })
+    state = cycle(state)
+    expect(state.ownership['CAP_A']).toBe('US')
+    state = cycle(state)
+    expect(state.ownership['CAP_A']).toBe('RUS')
+    state = cycle(state)
+    expect(state.ownership['CAP_A']).toBe('US')
+    state = cycle(state)
+    expect(state.ownership['CAP_A']).toBe('RUS')
   })
 
   it('RESET_ALL sets everything back to neutral', () => {

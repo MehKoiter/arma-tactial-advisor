@@ -23,13 +23,25 @@ interface MapContextMenuProps {
 
 const CATEGORY_LABELS: Record<IndicatorCategory, string> = {
   'fire-support': 'Fire Support',
-  'logistics':    'Logistics',
-  'recon':        'Recon / Intel',
-  'movement':     'Movement',
-  'hazard':       'Hazards',
+  logistics: 'Logistics',
+  recon: 'Recon / Intel',
+  movement: 'Movement',
+  hazard: 'Hazards',
 }
 
-export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob, hasEnemyMob, onPlace, onRate, onSetMob, onClearMob, onClose }: MapContextMenuProps) {
+export function MapContextMenu({
+  x,
+  y,
+  targetCapName,
+  playerTeam,
+  hasFriendlyMob,
+  hasEnemyMob,
+  onPlace,
+  onRate,
+  onSetMob,
+  onClearMob,
+  onClose,
+}: MapContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -55,27 +67,45 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
   const enemyTeam: MobFaction = playerTeam === 'US' ? 'RUS' : 'US'
 
   return (
-    <div ref={menuRef} className={styles.menu} style={style} role="menu" aria-label="Map context menu">
+    <div
+      ref={menuRef}
+      className={styles.menu}
+      style={style}
+      role="menu"
+      aria-label="Map context menu"
+    >
       <div className={styles.header}>Main Operating Base (MOB)</div>
       <button
         type="button"
         role="menuitem"
         className={styles.item}
         style={{ '--accent': MOB_COLORS[playerTeam] } as React.CSSProperties}
-        onClick={() => { onSetMob(playerTeam); onClose() }}
+        onClick={() => {
+          onSetMob(playerTeam)
+          onClose()
+        }}
       >
         <span className={styles.itemIcon}>★</span>
-        <span>{hasFriendlyMob ? `Move ${playerTeam} MOB here` : `Set ${playerTeam} (my) MOB here`}</span>
+        <span>
+          {hasFriendlyMob ? `Move ${playerTeam} MOB here` : `Set ${playerTeam} (my) MOB here`}
+        </span>
       </button>
       <button
         type="button"
         role="menuitem"
         className={styles.item}
         style={{ '--accent': MOB_COLORS[enemyTeam] } as React.CSSProperties}
-        onClick={() => { onSetMob(enemyTeam); onClose() }}
+        onClick={() => {
+          onSetMob(enemyTeam)
+          onClose()
+        }}
       >
         <span className={styles.itemIcon}>★</span>
-        <span>{hasEnemyMob ? `Move ${enemyTeam} (enemy) MOB here` : `Mark ${enemyTeam} (enemy) MOB here`}</span>
+        <span>
+          {hasEnemyMob
+            ? `Move ${enemyTeam} (enemy) MOB here`
+            : `Mark ${enemyTeam} (enemy) MOB here`}
+        </span>
       </button>
       {hasFriendlyMob && (
         <button
@@ -83,7 +113,10 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
           role="menuitem"
           className={styles.item}
           style={{ '--accent': '#888' } as React.CSSProperties}
-          onClick={() => { onClearMob(playerTeam); onClose() }}
+          onClick={() => {
+            onClearMob(playerTeam)
+            onClose()
+          }}
         >
           <span className={styles.itemIcon}>✕</span>
           <span>Clear {playerTeam} (my) MOB</span>
@@ -95,7 +128,10 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
           role="menuitem"
           className={styles.item}
           style={{ '--accent': '#888' } as React.CSSProperties}
-          onClick={() => { onClearMob(enemyTeam); onClose() }}
+          onClick={() => {
+            onClearMob(enemyTeam)
+            onClose()
+          }}
         >
           <span className={styles.itemIcon}>✕</span>
           <span>Clear {enemyTeam} (enemy) MOB</span>
@@ -105,9 +141,7 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
       <div className={styles.header}>
         {targetCapName ? `Rate Position vs ${targetCapName}` : 'Rate Position'}
       </div>
-      {!targetCapName && (
-        <div className={styles.ratingHint}>Select a target CAP first</div>
-      )}
+      {!targetCapName && <div className={styles.ratingHint}>Select a target CAP first</div>}
       <div className={styles.ratingRow}>
         {([1, 2, 3, 4, 5] as Rating[]).map((r) => (
           <button
@@ -119,7 +153,10 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
             title={RATING_LABELS[r]}
             aria-label={`Rate ${r} — ${RATING_LABELS[r]}`}
             disabled={!targetCapName}
-            onClick={() => { onRate(r); onClose() }}
+            onClick={() => {
+              onRate(r)
+              onClose()
+            }}
           >
             <span className={styles.ratingNum}>{r}</span>
             <span className={styles.ratingLabel}>{RATING_LABELS[r]}</span>
@@ -140,7 +177,10 @@ export function MapContextMenu({ x, y, targetCapName, playerTeam, hasFriendlyMob
                 role="menuitem"
                 className={styles.item}
                 style={{ '--accent': item.color } as React.CSSProperties}
-                onClick={() => { onPlace(item.id); onClose() }}
+                onClick={() => {
+                  onPlace(item.id)
+                  onClose()
+                }}
               >
                 <span className={styles.itemIcon}>{item.icon}</span>
                 <span>{item.label}</span>

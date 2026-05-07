@@ -5,20 +5,14 @@ describe('InterimRoutingProvider', () => {
   const provider = new InterimRoutingProvider()
 
   it('returns a straight-line route with two coordinates', async () => {
-    const result = await provider.getRoute(
-      { lng: -17.88, lat: 16.18 },
-      { lng: -17.82, lat: 16.14 },
-    )
+    const result = await provider.getRoute({ lng: -17.88, lat: 16.18 }, { lng: -17.82, lat: 16.14 })
     expect(result.coordinates).toHaveLength(2)
     expect(result.coordinates[0]).toEqual({ lng: -17.88, lat: 16.18 })
     expect(result.coordinates[1]).toEqual({ lng: -17.82, lat: 16.14 })
   })
 
   it('calculates a positive distance', async () => {
-    const result = await provider.getRoute(
-      { lng: -17.88, lat: 16.18 },
-      { lng: -17.82, lat: 16.14 },
-    )
+    const result = await provider.getRoute({ lng: -17.88, lat: 16.18 }, { lng: -17.82, lat: 16.14 })
     expect(result.distanceMetres).toBeGreaterThan(0)
   })
 
