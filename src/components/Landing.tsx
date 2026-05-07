@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { setSlugInUrl, setStoredPin } from '@/providers/RoomContext'
+import { RoomBrowser, type PublicRoom } from './RoomBrowser'
 import styles from './Landing.module.css'
 
 function randomSlug(): string {
@@ -12,15 +13,19 @@ function randomSlug(): string {
 
 export function Landing() {
   const [creating, setCreating] = useState(false)
+  const [createName, setCreateName] = useState('')
   const [createPin, setCreatePin] = useState('')
   const [createBmUs, setCreateBmUs] = useState('')
   const [createBmRus, setCreateBmRus] = useState('')
+  const [createPublic, setCreatePublic] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
   const [joinSlug, setJoinSlug] = useState('')
   const [joinPin, setJoinPin] = useState('')
   const [joining, setJoining] = useState(false)
   const [joinError, setJoinError] = useState<string | null>(null)
+
+  const [browserOpen, setBrowserOpen] = useState(false)
 
   async function handleCreate() {
     setCreating(true)
@@ -30,6 +35,7 @@ export function Landing() {
       for (let attempt = 0; attempt < 5; attempt++) {
         const slug = randomSlug()
         const pin = createPin.trim() || null
+        const name = createName.trim() || null
         const parseBm = (raw: string) => {
           const t = raw.trim()
           if (!t) return null
@@ -38,7 +44,14 @@ export function Landing() {
         }
         const battlemetrics_us_id = parseBm(createBmUs)
         const battlemetrics_rus_id = parseBm(createBmRus)
-        const { error } = await supabase.from('rooms').insert({ slug, pin, battlemetrics_us_id, battlemetrics_rus_id })
+        const { error } = await supabase.from('rooms').insert({
+          slug,
+          pin,
+          name,
+          is_public: createPublic,
+          battlemetrics_us_id,
+          battlemetrics_rus_id,
+        })
         if (!error) {
           if (pin) setStoredPin(slug, pin)
           setSlugInUrl(slug)
@@ -86,6 +99,13 @@ export function Landing() {
     setSlugInUrl('public')
   }
 
+  function handlePickFromBrowser(room: PublicRoom) {
+    setJoinSlug(room.slug)
+    if (!room.has_pin) setJoinPin('')
+    setJoinError(null)
+    setBrowserOpen(false)
+  }
+
   return (
     <div className={styles.landing}>
       <h1 className={styles.title}>Arma Reforger Tactical Advisor</h1>
@@ -95,6 +115,16 @@ export function Landing() {
         <div className={styles.card}>
           <h2>Create a new room</h2>
           <p>Generates a random code that you can share. Set an optional 4-digit PIN for light protection.</p>
+          <label>
+            Room name (optional)
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="e.g. Friday Night Ops"
+              maxLength={48}
+            />
+          </label>
           <label>
             PIN (optional)
             <input
@@ -127,6 +157,14 @@ export function Landing() {
               autoCapitalize="none"
               autoCorrect="off"
             />
+          </label>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={createPublic}
+              onChange={(e) => setCreatePublic(e.target.checked)}
+            />
+            <span>List this room in the public browser</span>
           </label>
           {createError && <p className={styles.error}>{createError}</p>}
           <button onClick={handleCreate} disabled={creating}>
@@ -162,12 +200,19 @@ export function Landing() {
           <button onClick={handleJoin} disabled={joining}>
             {joining ? 'Joining…' : 'Join room'}
           </button>
+          <button type="button" onClick={() => setBrowserOpen(true)} className={styles.secondaryBtn}>
+            Browse public rooms
+          </button>
         </div>
       </div>
 
       <p className={styles.publicLink}>
         Or <a onClick={joinPublic} style={{ cursor: 'pointer' }}>jump into the public room</a>.
       </p>
+
+      {browserOpen && (
+        <RoomBrowser onPick={handlePickFromBrowser} onClose={() => setBrowserOpen(false)} />
+      )}
     </div>
   )
 }
