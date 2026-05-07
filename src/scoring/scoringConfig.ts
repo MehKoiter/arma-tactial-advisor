@@ -20,11 +20,6 @@ export interface ScoringConfig {
    */
   notesBiasWeight: number
   /**
-   * Radius in metres around a CAP centre within which position notes are considered.
-   * Notes outside this radius do not influence that CAP's score.
-   */
-  notesSearchRadiusMetres: number
-  /**
    * Urgency multiplier when a friendly CAP is actively flagged as under attack.
    * Adds a flat bonus equal to this weight, pushing the CAP to the top of defend recommendations.
    */
@@ -65,20 +60,19 @@ export interface ScoringConfig {
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   enemyPressureWeight: 3.0,
   contestedCentralityWeight: 2.5, // ratio [0,1]; weight tuned up since values are smaller
-  overextensionPenalty: 3.0,      // graded [0,1]; meaningful penalty when deep in enemy territory
+  overextensionPenalty: 3.0, // graded [0,1]; meaningful penalty when deep in enemy territory
   movementFeasibilityWeight: 1.5,
   maxFeasibleHops: 3,
   notesBiasWeight: 2.0,
-  notesSearchRadiusMetres: 500,
   underAttackUrgencyWeight: 4.0,
   attackingNeighborWeight: 2.0,
   supplyProximityWeight: 1.5,
   supplyProximityRadiusMetres: 1500,
-  chokepointWeight: 3.5,          // strong signal — cut vertices are critical
-  radioConnectedWeight: 2.0,      // online bases are worth defending
-  radioIsolatedPenalty: 2.5,      // isolated bases are write-offs
-  radioChokepointWeight: 4.5,     // sharper than topology — the Reforger sever
-  topN: 3,                        // condensed list — quality over quantity
+  chokepointWeight: 3.5, // strong signal — cut vertices are critical
+  radioConnectedWeight: 2.0, // online bases are worth defending
+  radioIsolatedPenalty: 2.5, // isolated bases are write-offs
+  radioChokepointWeight: 4.5, // sharper than topology — the Reforger sever
+  topN: 3, // condensed list — quality over quantity
 }
 
 /**
@@ -100,8 +94,6 @@ export interface AttackScoringConfig {
   majorBaseBonus: number
   /** Weight for positive field notes near the target */
   notesBiasWeight: number
-  /** Radius in metres to search for nearby position notes */
-  notesSearchRadiusMetres: number
   /**
    * Bonus when the target enemy CAP already has the "attacking" flag set.
    * Rewards maintaining momentum on an active assault.
@@ -151,7 +143,6 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   maxFeasibleHops: 4,
   majorBaseBonus: 1.5,
   notesBiasWeight: 2.0,
-  notesSearchRadiusMetres: 500,
   // Soft tiebreaker for player-flagged targets, not a runaway boost.
   momentumWeight: 1.0,
   // Capped at 1.0 in the engine, so this is the ceiling, not multiplied per ally.
@@ -160,10 +151,10 @@ export const DEFAULT_ATTACK_CONFIG: AttackScoringConfig = {
   supplyProximityRadiusMetres: 1500,
   chokepointWeight: 3.0,
   enemyRadioChokepointWeight: 4.5, // headline play — sever the enemy chain
-  enemyOfflineWeight: 2.5,         // offline bases are easy captures
-  noProjectionPenalty: 2.0,        // soft — still listed, just downranked
-  outOfRadioRangePenalty: 3.5,     // soft — stronger than projection, weaker than chokepoint
-  topN: 3,                         // condensed list
+  enemyOfflineWeight: 2.5, // offline bases are easy captures
+  noProjectionPenalty: 2.0, // soft — still listed, just downranked
+  outOfRadioRangePenalty: 3.5, // soft — stronger than projection, weaker than chokepoint
+  topN: 3, // condensed list
 }
 
 // ---------------------------------------------------------------------------
@@ -189,8 +180,6 @@ export interface AttackHeloConfig {
   maxRangeMetres: number
   /** Weight for positive field notes near target */
   notesBiasWeight: number
-  /** Radius in metres for nearby notes search */
-  notesSearchRadiusMetres: number
   /** Bonus for enemy CAPs near supply depots — denies enemy resupply */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
@@ -205,7 +194,6 @@ export const DEFAULT_ATTACK_HELO_CONFIG: AttackHeloConfig = {
   rangeWeight: 1.5,
   maxRangeMetres: 8000,
   notesBiasWeight: 1.5,
-  notesSearchRadiusMetres: 600,
   supplyProximityWeight: 1.5,
   supplyProximityRadiusMetres: 2000,
   topN: 5,
@@ -231,7 +219,6 @@ export interface TransportHeloConfig {
   maxRangeMetres: number
   /** Weight for positive field notes near LZ */
   notesBiasWeight: number
-  notesSearchRadiusMetres: number
   /** Bonus for friendly LZs near supply depots — troops can rearm locally */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
@@ -245,7 +232,6 @@ export const DEFAULT_TRANSPORT_HELO_CONFIG: TransportHeloConfig = {
   rangeWeight: 1.0,
   maxRangeMetres: 10000,
   notesBiasWeight: 1.0,
-  notesSearchRadiusMetres: 600,
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 1000,
   topN: 5,
@@ -272,7 +258,6 @@ export interface ReinforceConfig {
   maxRangeMetres: number
   /** Weight for positive field notes near the target */
   notesBiasWeight: number
-  notesSearchRadiusMetres: number
   /** Bonus for enemy CAPs near supply depots — high-value capture target */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
@@ -286,7 +271,6 @@ export const DEFAULT_REINFORCE_CONFIG: ReinforceConfig = {
   rangeWeight: 1.0,
   maxRangeMetres: 10000,
   notesBiasWeight: 1.0,
-  notesSearchRadiusMetres: 600,
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 1500,
   topN: 5,
@@ -312,7 +296,6 @@ export interface InfantryDefendConfig {
   maxRangeMetres: number
   /** Notes-bias weight (uses position notes tagged for INFANTRY). */
   notesBiasWeight: number
-  notesSearchRadiusMetres: number
   /** Bonus for friendly CAPs near supply caches — squad can rearm locally. */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
@@ -326,7 +309,6 @@ export const DEFAULT_INFANTRY_DEFEND_CONFIG: InfantryDefendConfig = {
   rangeWeight: 2.0,
   maxRangeMetres: 1500,
   notesBiasWeight: 1.5,
-  notesSearchRadiusMetres: 300,
   supplyProximityWeight: 1.5,
   supplyProximityRadiusMetres: 500,
   topN: 5,
@@ -351,7 +333,6 @@ export interface InfantryAssaultConfig {
   rangeWeight: number
   maxRangeMetres: number
   notesBiasWeight: number
-  notesSearchRadiusMetres: number
   /** Bonus for enemy CAPs near supply caches — high-value capture. */
   supplyProximityWeight: number
   supplyProximityRadiusMetres: number
@@ -367,7 +348,6 @@ export const DEFAULT_INFANTRY_ASSAULT_CONFIG: InfantryAssaultConfig = {
   rangeWeight: 2.0,
   maxRangeMetres: 1500,
   notesBiasWeight: 1.5,
-  notesSearchRadiusMetres: 300,
   supplyProximityWeight: 2.0,
   supplyProximityRadiusMetres: 500,
   topN: 5,
@@ -386,21 +366,19 @@ export interface RangefinderRing {
 
 export const RANGEFINDER_RINGS_BY_VEHICLE: Record<string, RangefinderRing[]> = {
   LAV: [
-    { key: 'min',   label: 'Min (300 m)',     radiusM: 300,  color: '#ef5350' },
+    { key: 'min', label: 'Min (300 m)', radiusM: 300, color: '#ef5350' },
     { key: 'ideal', label: 'Ideal (1 500 m)', radiusM: 1500, color: '#66bb6a' },
-    { key: 'max',   label: 'Max (2 000 m)',   radiusM: 2000, color: '#ffa726' },
+    { key: 'max', label: 'Max (2 000 m)', radiusM: 2000, color: '#ffa726' },
   ],
   ATTACK_HELO: [
-    { key: 'min',   label: 'Min (500 m)',     radiusM: 500,  color: '#ef5350' },
+    { key: 'min', label: 'Min (500 m)', radiusM: 500, color: '#ef5350' },
     { key: 'ideal', label: 'Ideal (2 500 m)', radiusM: 2500, color: '#66bb6a' },
-    { key: 'max',   label: 'Max (4 000 m)',   radiusM: 4000, color: '#ffa726' },
+    { key: 'max', label: 'Max (4 000 m)', radiusM: 4000, color: '#ffa726' },
   ],
-  TRANSPORT_HELO: [
-    { key: 'lz', label: 'LZ radius (200 m)', radiusM: 200, color: '#ab47bc' },
-  ],
+  TRANSPORT_HELO: [{ key: 'lz', label: 'LZ radius (200 m)', radiusM: 200, color: '#ab47bc' }],
   INFANTRY: [
-    { key: 'min',   label: 'CQB (100 m)',     radiusM: 100, color: '#ef5350' },
-    { key: 'ideal', label: 'Engage (300 m)',  radiusM: 300, color: '#66bb6a' },
-    { key: 'max',   label: 'Max (500 m)',     radiusM: 500, color: '#ffa726' },
+    { key: 'min', label: 'CQB (100 m)', radiusM: 100, color: '#ef5350' },
+    { key: 'ideal', label: 'Engage (300 m)', radiusM: 300, color: '#66bb6a' },
+    { key: 'max', label: 'Max (500 m)', radiusM: 500, color: '#ffa726' },
   ],
 }
