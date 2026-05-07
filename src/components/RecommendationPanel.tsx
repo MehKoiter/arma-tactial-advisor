@@ -14,7 +14,7 @@ const EMPTY_MESSAGES: Record<string, { primary: string; secondary: string }> = {
   LAV:            { primary: 'No friendly CAPs. Mark some CAPs as friendly.', secondary: 'No frontline targets. Ensure friendly CAPs border enemy territory.' },
   ATTACK_HELO:    { primary: 'No enemy targets. Mark some CAPs as enemy.', secondary: '' },
   TRANSPORT_HELO: { primary: 'No friendly CAPs to resupply. Mark some CAPs as friendly.', secondary: 'No active assaults. Mark enemy CAPs as being attacked (⚔) to see reinforce targets.' },
-  INFANTRY:       { primary: 'No friendly CAPs to garrison. Mark some CAPs as friendly.', secondary: 'No enemy CAPs in foot range. Move closer to a contested frontline.' },
+  INFANTRY:       { primary: 'No friendly CAPs to garrison. Mark some CAPs as friendly.', secondary: 'No targets in foot range. Move closer to a contested or neutral CAP.' },
 }
 
 export function RecommendationPanel() {

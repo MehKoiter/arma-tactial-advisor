@@ -855,6 +855,7 @@ export interface InfantryAssaultScoredCAP {
     friendlySupport: number
     isolation: number
     majorPenalty: number
+    uncontested: number
     rangeScore: number
     notesBias: number
     supplyProximity: number
@@ -862,8 +863,9 @@ export interface InfantryAssaultScoredCAP {
 }
 
 /**
- * Ranks enemy CAPs an infantry squad should assault on foot.
+ * Ranks enemy and neutral CAPs an infantry squad should assault on foot.
  * Tilts toward isolated minor bases adjacent to friendlies within walking range.
+ * Neutral CAPs are included as uncontested-capture opportunities.
  */
 export function scoreInfantryAssault(
   caps: CAP[],
@@ -876,8 +878,14 @@ export function scoreInfantryAssault(
   const enemy: PlayerTeam = playerTeam === 'US' ? 'RUS' : 'US'
 
   const scored = caps
-    .filter((cap) => (ownership[cap.id] ?? 'neutral') === enemy)
+    .filter((cap) => {
+      const owner = ownership[cap.id] ?? 'neutral'
+      return owner === enemy || owner === 'neutral'
+    })
     .map((cap) => {
+      const owner = ownership[cap.id] ?? 'neutral'
+      const isNeutral = owner === 'neutral'
+
       const momentum = attacking.has(cap.id) ? 1 : 0
 
       const friendlySupport = cap.neighbors.filter((n) => (ownership[n] ?? 'neutral') === playerTeam).length
@@ -890,6 +898,9 @@ export function scoreInfantryAssault(
       // Major bases are harder to clear on foot — apply a flat penalty.
       const majorPenalty = cap.type === 'major' ? 1 : 0
 
+      // Neutral CAPs are uncontested — free capture if you can walk in.
+      const uncontested = isNeutral ? 1 : 0
+
       const rangeScore = straightLineRangeScore(cap, lavPosition, caps, config.maxRangeMetres)
       const notesBias = calcNotesBias(cap, notes, config.notesSearchRadiusMetres)
       const supplyProximity = calcSupplyProximity(cap, supplyPoints, config.supplyProximityRadiusMetres)
@@ -898,19 +909,22 @@ export function scoreInfantryAssault(
         momentum         * config.momentumWeight +
         friendlySupport  * config.friendlySupportWeight +
         isolation        * config.isolationWeight +
+        uncontested      * config.uncontestedBonus +
         rangeScore       * config.rangeWeight +
         notesBias        * config.notesBiasWeight +
         supplyProximity  * config.supplyProximityWeight -
         majorPenalty     * config.majorBasePenalty
 
       const rationale: string[] = []
+      if (uncontested)
+        rationale.push('Neutral CAP — uncontested capture')
       if (momentum)
         rationale.push('⚔ Already engaging — keep momentum')
       if (friendlySupport > 0)
         rationale.push(`${friendlySupport} friendly CAP(s) adjacent — staging support`)
-      if (isolation >= 0.6)
+      if (!isNeutral && isolation >= 0.6)
         rationale.push('Isolated target — limited enemy reinforcement')
-      else if (isolation < 0.4)
+      else if (!isNeutral && isolation < 0.4)
         rationale.push('Enemy reinforcements nearby — fast assault required')
       if (majorPenalty)
         rationale.push('Major base — hard to clear on foot, prefer fire support')
@@ -923,13 +937,13 @@ export function scoreInfantryAssault(
       if (supplyProximity > 0.1)
         rationale.push('Capturing grants supply access')
       if (rationale.length === 0)
-        rationale.push('Capturable enemy CAP within foot range')
+        rationale.push(isNeutral ? 'Neutral CAP within foot range' : 'Capturable enemy CAP within foot range')
 
       return {
         cap,
         totalScore,
         rationale,
-        infantryAssaultFactors: { momentum, friendlySupport, isolation, majorPenalty, rangeScore, notesBias, supplyProximity },
+        infantryAssaultFactors: { momentum, friendlySupport, isolation, majorPenalty, uncontested, rangeScore, notesBias, supplyProximity },
       }
     })
 

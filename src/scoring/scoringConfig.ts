@@ -345,6 +345,8 @@ export interface InfantryAssaultConfig {
   isolationWeight: number
   /** Penalty for major bases — harder to take on foot. */
   majorBasePenalty: number
+  /** Bonus for neutral (uncontested) CAPs — free capture. */
+  uncontestedBonus: number
   /** Reachability within maxRangeMetres straight-line. */
   rangeWeight: number
   maxRangeMetres: number
@@ -361,6 +363,7 @@ export const DEFAULT_INFANTRY_ASSAULT_CONFIG: InfantryAssaultConfig = {
   friendlySupportWeight: 3.0,
   isolationWeight: 2.5,
   majorBasePenalty: 1.5,
+  uncontestedBonus: 3.0,
   rangeWeight: 2.0,
   maxRangeMetres: 1500,
   notesBiasWeight: 1.5,
