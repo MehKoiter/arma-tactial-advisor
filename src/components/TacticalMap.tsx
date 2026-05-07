@@ -33,18 +33,20 @@ function makeCircleGeoJSON(lng: number, lat: number, radiusM: number, steps = 72
   })
   return {
     type: 'FeatureCollection' as const,
-    features: [{
-      type: 'Feature' as const,
-      geometry: { type: 'Polygon' as const, coordinates: [coords] },
-      properties: {},
-    }],
+    features: [
+      {
+        type: 'Feature' as const,
+        geometry: { type: 'Polygon' as const, coordinates: [coords] },
+        properties: {},
+      },
+    ],
   }
 }
 
 const OWNER_COLORS: Record<string, string> = {
   neutral: '#78909c',
-  US:      '#42a5f5',
-  RUS:     '#ef5350',
+  US: '#42a5f5',
+  RUS: '#ef5350',
 }
 
 const MAP_STYLE = {
@@ -80,52 +82,92 @@ export function TacticalMap() {
   const { tab, primaryList, secondaryList, showSupplies } = useRecommendation()
   const [selectedSuggestion, setSelectedSuggestion] = useState<AnyScored | null>(null)
   const [hoveredAnchorId, setHoveredAnchorId] = useState<string | null>(null)
-  const RANGEFINDER_RINGS = RANGEFINDER_RINGS_BY_VEHICLE[state.vehicleType] ?? RANGEFINDER_RINGS_BY_VEHICLE['LAV']
+  const RANGEFINDER_RINGS =
+    RANGEFINDER_RINGS_BY_VEHICLE[state.vehicleType] ?? RANGEFINDER_RINGS_BY_VEHICLE['LAV']
   const [routes, setRoutes] = useState<globalThis.Map<string, RouteResult>>(new globalThis.Map())
   const [rangefinderActive, setRangefinderActive] = useState(false)
   const [rangefinderLocked, setRangefinderLocked] = useState(false)
-  const [rangefinderCenter, setRangefinderCenter] = useState<{ lng: number; lat: number } | null>(null)
+  const [rangefinderCenter, setRangefinderCenter] = useState<{ lng: number; lat: number } | null>(
+    null,
+  )
   const { indicators, addIndicator, removeIndicator } = useIndicatorsContext()
   const { mobs, setMob, clearMob } = useMobsContext()
   const [showNotesHeatmap, setShowNotesHeatmap] = useState(true)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lng: number; lat: number } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    lng: number
+    lat: number
+  } | null>(null)
 
-  const handleMapClick = useCallback((e: { lngLat: { lng: number; lat: number } }) => {
-    setContextMenu(null)
-    if (rangefinderActive && !rangefinderLocked) {
-      setRangefinderCenter({ lng: e.lngLat.lng, lat: e.lngLat.lat })
-    }
-  }, [rangefinderActive, rangefinderLocked])
+  const handleMapClick = useCallback(
+    (e: { lngLat: { lng: number; lat: number } }) => {
+      setContextMenu(null)
+      if (rangefinderActive && !rangefinderLocked) {
+        setRangefinderCenter({ lng: e.lngLat.lng, lat: e.lngLat.lat })
+      }
+    },
+    [rangefinderActive, rangefinderLocked],
+  )
 
-  const handleMapContextMenu = useCallback((e: { lngLat: { lng: number; lat: number }; originalEvent: MouseEvent }) => {
-    e.originalEvent.preventDefault()
-    setContextMenu({ x: e.originalEvent.clientX, y: e.originalEvent.clientY, lng: e.lngLat.lng, lat: e.lngLat.lat })
-  }, [])
+  const handleMapContextMenu = useCallback(
+    (e: { lngLat: { lng: number; lat: number }; originalEvent: MouseEvent }) => {
+      e.originalEvent.preventDefault()
+      setContextMenu({
+        x: e.originalEvent.clientX,
+        y: e.originalEvent.clientY,
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+      })
+    },
+    [],
+  )
 
   const { notes, addNote, removeNote, clearNotes } = usePositionNotesContext()
 
-  const handlePlaceIndicator = useCallback((typeId: string) => {
-    if (!contextMenu) return
-    addIndicator(typeId, contextMenu.lng, contextMenu.lat)
-  }, [contextMenu, addIndicator])
+  const handlePlaceIndicator = useCallback(
+    (typeId: string) => {
+      if (!contextMenu) return
+      addIndicator(typeId, contextMenu.lng, contextMenu.lat)
+    },
+    [contextMenu, addIndicator],
+  )
 
-  const handleRemoveIndicator = useCallback((uid: string) => {
-    removeIndicator(uid)
-  }, [removeIndicator])
+  const handleRemoveIndicator = useCallback(
+    (uid: string) => {
+      removeIndicator(uid)
+    },
+    [removeIndicator],
+  )
 
-  const handleRatePosition = useCallback((rating: Rating) => {
-    if (!contextMenu || !selectedSuggestion) return
-    addNote(contextMenu.lng, contextMenu.lat, rating, selectedSuggestion.cap.id, state.vehicleType)
-  }, [contextMenu, selectedSuggestion, addNote, state.vehicleType])
+  const handleRatePosition = useCallback(
+    (rating: Rating) => {
+      if (!contextMenu || !selectedSuggestion) return
+      addNote(
+        contextMenu.lng,
+        contextMenu.lat,
+        rating,
+        selectedSuggestion.cap.id,
+        state.vehicleType,
+      )
+    },
+    [contextMenu, selectedSuggestion, addNote, state.vehicleType],
+  )
 
-  const handleSetMob = useCallback((faction: MobFaction) => {
-    if (!contextMenu) return
-    setMob(faction, contextMenu.lng, contextMenu.lat)
-  }, [contextMenu, setMob])
+  const handleSetMob = useCallback(
+    (faction: MobFaction) => {
+      if (!contextMenu) return
+      setMob(faction, contextMenu.lng, contextMenu.lat)
+    },
+    [contextMenu, setMob],
+  )
 
-  const handleClearMob = useCallback((faction: MobFaction) => {
-    clearMob(faction)
-  }, [clearMob])
+  const handleClearMob = useCallback(
+    (faction: MobFaction) => {
+      clearMob(faction)
+    },
+    [clearMob],
+  )
 
   // Active list switches with tab; clear any stale selection on tab change
   const activeList: AnyScored[] = tab === 'secondary' ? secondaryList : primaryList
@@ -188,7 +230,7 @@ export function TacticalMap() {
   const radioLinksGeoJSON = useMemo(() => {
     const capLinks = computeRadioLinks(everonCAPs, state.ownership, state.radio)
     const mobAnchors = (['US', 'RUS'] as const)
-      .map((f) => mobs[f] ? { faction: f, lng: mobs[f]!.lng, lat: mobs[f]!.lat } : null)
+      .map((f) => (mobs[f] ? { faction: f, lng: mobs[f]!.lng, lat: mobs[f]!.lat } : null))
       .filter((x): x is { faction: 'US' | 'RUS'; lng: number; lat: number } => x != null)
     const mobLinks = computeMobRadioLinks(everonCAPs, state.ownership, state.radio, mobAnchors)
     const allLinks = [...capLinks, ...mobLinks]
@@ -216,7 +258,15 @@ export function TacticalMap() {
   // every enemy CAP in radio range. Visualises that anchor's individual reach,
   // independent of player team or whose anchor is "nearest" globally.
   const { attackProjectionGeoJSON, attackableEnemiesGeoJSON } = useMemo(() => {
-    type Line = { fromLng: number; fromLat: number; toLng: number; toLat: number; toId: string; attacker: 'US' | 'RUS'; distanceM: number }
+    type Line = {
+      fromLng: number
+      fromLat: number
+      toLng: number
+      toLat: number
+      toId: string
+      attacker: 'US' | 'RUS'
+      distanceM: number
+    }
     const lines: Line[] = []
     if (hoveredAnchorId) {
       let anchorFaction: 'US' | 'RUS' | null = null
@@ -225,10 +275,14 @@ export function TacticalMap() {
       if (hoveredAnchorId.startsWith('MOB_')) {
         const f = hoveredAnchorId.slice(4) as 'US' | 'RUS'
         const m = mobs[f]
-        if (m) { anchorFaction = f; anchorLng = m.lng; anchorLat = m.lat }
+        if (m) {
+          anchorFaction = f
+          anchorLng = m.lng
+          anchorLat = m.lat
+        }
       } else {
         const cap = everonCAPs.find((c) => c.id === hoveredAnchorId)
-        const owner = cap ? state.ownership[cap.id] ?? 'neutral' : 'neutral'
+        const owner = cap ? (state.ownership[cap.id] ?? 'neutral') : 'neutral'
         if (cap && (owner === 'US' || owner === 'RUS') && state.radio.has(cap.id)) {
           anchorFaction = owner
           anchorLng = cap.coords.lng
@@ -278,7 +332,7 @@ export function TacticalMap() {
       })),
     }
     return { attackProjectionGeoJSON: linesFC, attackableEnemiesGeoJSON: haloFC }
-  }, [state, mobs, hoveredAnchorId])
+  }, [state.ownership, state.radio, mobs, hoveredAnchorId])
 
   // 3 km radio-range circle around the hovered CAP/MOB. Always drawn (even
   // for neutral CAPs) so the user sees the reach at a glance.
@@ -290,10 +344,18 @@ export function TacticalMap() {
     if (hoveredAnchorId.startsWith('MOB_')) {
       const f = hoveredAnchorId.slice(4) as 'US' | 'RUS'
       const m = mobs[f]
-      if (m) { lng = m.lng; lat = m.lat; faction = f }
+      if (m) {
+        lng = m.lng
+        lat = m.lat
+        faction = f
+      }
     } else {
       const cap = everonCAPs.find((c) => c.id === hoveredAnchorId)
-      if (cap) { lng = cap.coords.lng; lat = cap.coords.lat; faction = state.ownership[cap.id] ?? 'neutral' }
+      if (cap) {
+        lng = cap.coords.lng
+        lat = cap.coords.lat
+        faction = state.ownership[cap.id] ?? 'neutral'
+      }
     }
     if (lng == null || lat == null) return { type: 'FeatureCollection' as const, features: [] }
     const fc = makeCircleGeoJSON(lng, lat, 3000)
@@ -307,13 +369,23 @@ export function TacticalMap() {
   // Layering a red heatmap (avoidance) under a green heatmap (desired) produces a correct red→green grade.
   // heatmap-radius uses exponential zoom interpolation to keep the blob a fixed geographic size (~300 m).
   // At zoom 13, 300 m ≈ 16 px (19.1 m/px); radius doubles every zoom level matching tile scaling.
-  const HEATMAP_RADIUS_EXPR = ['interpolate', ['exponential', 2], ['zoom'], 10, 2.66, 24, 43581] as ExpressionSpecification
+  const HEATMAP_RADIUS_EXPR = [
+    'interpolate',
+    ['exponential', 2],
+    ['zoom'],
+    10,
+    2.66,
+    24,
+    43581,
+  ] as ExpressionSpecification
 
   const notesAvoidGeoJSON = useMemo(
     () => ({
       type: 'FeatureCollection' as const,
       features: notes
-        .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
+        .filter(
+          (n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType,
+        )
         .map((n) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [n.lng, n.lat] },
@@ -327,7 +399,9 @@ export function TacticalMap() {
     () => ({
       type: 'FeatureCollection' as const,
       features: notes
-        .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
+        .filter(
+          (n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType,
+        )
         .map((n) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [n.lng, n.lat] },
@@ -354,25 +428,27 @@ export function TacticalMap() {
       >
         <NavigationControl position="top-right" />
 
-        {rangefinderActive && rangefinderCenter && RANGEFINDER_RINGS.map((ring) => (
-          <Source
-            key={ring.key}
-            id={`rf-${ring.key}`}
-            type="geojson"
-            data={makeCircleGeoJSON(rangefinderCenter.lng, rangefinderCenter.lat, ring.radiusM)}
-          >
-            <Layer
-              id={`rf-${ring.key}-fill`}
-              type="fill"
-              paint={{ 'fill-color': ring.color, 'fill-opacity': 0.07 }}
-            />
-            <Layer
-              id={`rf-${ring.key}-line`}
-              type="line"
-              paint={{ 'line-color': ring.color, 'line-width': 2, 'line-opacity': 0.9 }}
-            />
-          </Source>
-        ))}
+        {rangefinderActive &&
+          rangefinderCenter &&
+          RANGEFINDER_RINGS.map((ring) => (
+            <Source
+              key={ring.key}
+              id={`rf-${ring.key}`}
+              type="geojson"
+              data={makeCircleGeoJSON(rangefinderCenter.lng, rangefinderCenter.lat, ring.radiusM)}
+            >
+              <Layer
+                id={`rf-${ring.key}-fill`}
+                type="fill"
+                paint={{ 'fill-color': ring.color, 'fill-opacity': 0.07 }}
+              />
+              <Layer
+                id={`rf-${ring.key}-line`}
+                type="line"
+                paint={{ 'line-color': ring.color, 'line-width': 2, 'line-opacity': 0.9 }}
+              />
+            </Source>
+          ))}
 
         {activeList.length > 0 && (
           <Source id="heatmap" type="geojson" data={heatmapGeoJSON}>
@@ -427,8 +503,10 @@ export function TacticalMap() {
                 'fill-color': [
                   'match',
                   ['get', 'faction'],
-                  'US', '#42a5f5',
-                  'RUS', '#ef5350',
+                  'US',
+                  '#42a5f5',
+                  'RUS',
+                  '#ef5350',
                   '#90a4ae',
                 ] as ExpressionSpecification,
                 'fill-opacity': 0.06,
@@ -441,8 +519,10 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'faction'],
-                  'US', '#64b5f6',
-                  'RUS', '#ef5350',
+                  'US',
+                  '#64b5f6',
+                  'RUS',
+                  '#ef5350',
                   '#b0bec5',
                 ] as ExpressionSpecification,
                 'line-width': 1,
@@ -463,8 +543,10 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'owner'],
-                  'US', '#42a5f5',
-                  'RUS', '#ef5350',
+                  'US',
+                  '#42a5f5',
+                  'RUS',
+                  '#ef5350',
                   '#ef5350',
                 ] as ExpressionSpecification,
                 'line-width': 6,
@@ -481,8 +563,10 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'owner'],
-                  'US', '#64b5f6',
-                  'RUS', '#ef5350',
+                  'US',
+                  '#64b5f6',
+                  'RUS',
+                  '#ef5350',
                   '#ef5350',
                 ] as ExpressionSpecification,
                 'line-width': 1.5,
@@ -504,8 +588,10 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'attacker'],
-                  'US', '#ff5252',
-                  'RUS', '#42a5f5',
+                  'US',
+                  '#ff5252',
+                  'RUS',
+                  '#42a5f5',
                   '#ff5252',
                 ] as ExpressionSpecification,
                 'line-width': 8,
@@ -522,8 +608,10 @@ export function TacticalMap() {
                 'line-color': [
                   'match',
                   ['get', 'attacker'],
-                  'US', '#ff5252',
-                  'RUS', '#42a5f5',
+                  'US',
+                  '#ff5252',
+                  'RUS',
+                  '#42a5f5',
                   '#ff5252',
                 ] as ExpressionSpecification,
                 'line-width': 2.5,
@@ -547,8 +635,10 @@ export function TacticalMap() {
                 'circle-stroke-color': [
                   'match',
                   ['get', 'attacker'],
-                  'US', '#ff5252',
-                  'RUS', '#42a5f5',
+                  'US',
+                  '#ff5252',
+                  'RUS',
+                  '#42a5f5',
                   '#ff5252',
                 ] as ExpressionSpecification,
                 'circle-stroke-width': 2,
@@ -564,8 +654,10 @@ export function TacticalMap() {
                 'circle-stroke-color': [
                   'match',
                   ['get', 'attacker'],
-                  'US', '#ff5252',
-                  'RUS', '#42a5f5',
+                  'US',
+                  '#ff5252',
+                  'RUS',
+                  '#42a5f5',
                   '#ff5252',
                 ] as ExpressionSpecification,
                 'circle-stroke-width': 1,
@@ -575,17 +667,18 @@ export function TacticalMap() {
           </Source>
         )}
 
-        {showSupplies && everonSupplyPoints.map((sp, i) => (
-          <Marker key={`supply-${i}`} longitude={sp.lng} latitude={sp.lat}>
-            <div
-              className={styles.supplyMarker}
-              title={`Supply depot — ${sp.resources.toLocaleString()} resources`}
-              aria-label={`Supply depot, ${sp.resources.toLocaleString()} resources`}
-            >
-              📦
-            </div>
-          </Marker>
-        ))}
+        {showSupplies &&
+          everonSupplyPoints.map((sp, i) => (
+            <Marker key={`supply-${i}`} longitude={sp.lng} latitude={sp.lat}>
+              <div
+                className={styles.supplyMarker}
+                title={`Supply depot — ${sp.resources.toLocaleString()} resources`}
+                aria-label={`Supply depot, ${sp.resources.toLocaleString()} resources`}
+              >
+                📦
+              </div>
+            </Marker>
+          ))}
 
         {notes.length > 0 && showNotesHeatmap && (
           <>
@@ -600,11 +693,17 @@ export function TacticalMap() {
                   'heatmap-radius': HEATMAP_RADIUS_EXPR,
                   'heatmap-opacity': 0.75,
                   'heatmap-color': [
-                    'interpolate', ['linear'], ['heatmap-density'],
-                    0,    'rgba(0,0,0,0)',
-                    0.05, 'rgba(239,83,80,0.25)',
-                    0.4,  'rgba(239,83,80,0.65)',
-                    1,    'rgba(239,83,80,0.9)',
+                    'interpolate',
+                    ['linear'],
+                    ['heatmap-density'],
+                    0,
+                    'rgba(0,0,0,0)',
+                    0.05,
+                    'rgba(239,83,80,0.25)',
+                    0.4,
+                    'rgba(239,83,80,0.65)',
+                    1,
+                    'rgba(239,83,80,0.9)',
                   ],
                 }}
               />
@@ -620,11 +719,17 @@ export function TacticalMap() {
                   'heatmap-radius': HEATMAP_RADIUS_EXPR,
                   'heatmap-opacity': 0.75,
                   'heatmap-color': [
-                    'interpolate', ['linear'], ['heatmap-density'],
-                    0,    'rgba(0,0,0,0)',
-                    0.05, 'rgba(102,187,106,0.25)',
-                    0.4,  'rgba(102,187,106,0.65)',
-                    1,    'rgba(102,187,106,0.9)',
+                    'interpolate',
+                    ['linear'],
+                    ['heatmap-density'],
+                    0,
+                    'rgba(0,0,0,0)',
+                    0.05,
+                    'rgba(102,187,106,0.25)',
+                    0.4,
+                    'rgba(102,187,106,0.65)',
+                    1,
+                    'rgba(102,187,106,0.9)',
                   ],
                 }}
               />
@@ -633,19 +738,25 @@ export function TacticalMap() {
         )}
 
         {/* Note dot markers — right-click to remove */}
-        {showNotesHeatmap && notes
-          .filter((n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType)
-          .map((n) => (
-            <Marker key={n.uid} longitude={n.lng} latitude={n.lat} anchor="center">
-              <div
-                className={styles.noteDot}
-                style={{ '--note-color': RATING_COLORS[n.rating] } as React.CSSProperties}
-                title={`Rating ${n.rating} — ${RATING_LABELS[n.rating]}. Right-click to remove.`}
-                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); removeNote(n.uid) }}
-              />
-            </Marker>
-          ))
-        }
+        {showNotesHeatmap &&
+          notes
+            .filter(
+              (n) => n.capId === selectedSuggestion?.cap.id && n.vehicleType === state.vehicleType,
+            )
+            .map((n) => (
+              <Marker key={n.uid} longitude={n.lng} latitude={n.lat} anchor="center">
+                <div
+                  className={styles.noteDot}
+                  style={{ '--note-color': RATING_COLORS[n.rating] } as React.CSSProperties}
+                  title={`Rating ${n.rating} — ${RATING_LABELS[n.rating]}. Right-click to remove.`}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    removeNote(n.uid)
+                  }}
+                />
+              </Marker>
+            ))}
 
         {everonCAPs.map((cap) => {
           const owner = state.ownership[cap.id] ?? 'neutral'
@@ -700,7 +811,9 @@ export function TacticalMap() {
                 title={`${faction} MOB${isFriendly ? ' (friendly)' : ' (enemy — discovered)'} — right-click map to move or clear`}
                 aria-label={`${faction} MOB`}
                 onMouseEnter={() => setHoveredAnchorId(`MOB_${faction}`)}
-                onMouseLeave={() => setHoveredAnchorId((id) => (id === `MOB_${faction}` ? null : id))}
+                onMouseLeave={() =>
+                  setHoveredAnchorId((id) => (id === `MOB_${faction}` ? null : id))
+                }
               >
                 <span className={styles.mobGlyph}>{MOB_GLYPH}</span>
                 <span className={styles.mobLabel}>{faction} MOB</span>
@@ -718,7 +831,10 @@ export function TacticalMap() {
                 type="button"
                 className={styles.indicatorMarker}
                 style={{ '--ind-color': type.color } as React.CSSProperties}
-                onClick={(e) => { e.stopPropagation(); handleRemoveIndicator(ind.uid) }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRemoveIndicator(ind.uid)
+                }}
                 title={`${type.label} — click to remove`}
                 aria-label={`Remove ${type.label} indicator`}
               >
@@ -768,7 +884,9 @@ export function TacticalMap() {
           </button>
           {showNotesHeatmap && notes.length > 0 && (
             <>
-              <span className={styles.notesCount}>{notes.length} note{notes.length !== 1 ? 's' : ''}</span>
+              <span className={styles.notesCount}>
+                {notes.length} note{notes.length !== 1 ? 's' : ''}
+              </span>
               <button
                 type="button"
                 className={styles.notesClearBtn}
@@ -802,7 +920,11 @@ export function TacticalMap() {
               type="button"
               className={`${styles.rangefinderLockBtn} ${rangefinderLocked ? styles.rangefinderLockBtnActive : ''}`}
               onClick={() => setRangefinderLocked((v) => !v)}
-              title={rangefinderLocked ? 'Unlock rangefinder (click map to move)' : 'Lock rangefinder in place'}
+              title={
+                rangefinderLocked
+                  ? 'Unlock rangefinder (click map to move)'
+                  : 'Lock rangefinder in place'
+              }
               aria-label={rangefinderLocked ? 'Unlock rangefinder' : 'Lock rangefinder'}
             >
               {rangefinderLocked ? '🔒' : '🔓'}
@@ -855,13 +977,22 @@ export function TacticalMap() {
               <dt>Movement feasibility</dt>
               <dd>{selectedSuggestion.factors.movementFeasibility.toFixed(2)}</dd>
               {selectedSuggestion.factors.underAttackUrgency > 0 && (
-                <><dt>⚠ Under attack</dt><dd>URGENT</dd></>
+                <>
+                  <dt>⚠ Under attack</dt>
+                  <dd>URGENT</dd>
+                </>
               )}
               {selectedSuggestion.factors.attackingPressure > 0 && (
-                <><dt>⚔ Enemy pushing</dt><dd>{selectedSuggestion.factors.attackingPressure} neighbor(s)</dd></>
+                <>
+                  <dt>⚔ Enemy pushing</dt>
+                  <dd>{selectedSuggestion.factors.attackingPressure} neighbor(s)</dd>
+                </>
               )}
               {selectedSuggestion.factors.supplyProximity > 0.05 && (
-                <><dt>📦 Supply proximity</dt><dd>{(selectedSuggestion.factors.supplyProximity * 100).toFixed(0)}%</dd></>
+                <>
+                  <dt>📦 Supply proximity</dt>
+                  <dd>{(selectedSuggestion.factors.supplyProximity * 100).toFixed(0)}%</dd>
+                </>
               )}
             </dl>
           ) : 'attackFactors' in selectedSuggestion ? (
@@ -873,16 +1004,28 @@ export function TacticalMap() {
               <dt>Movement feasibility</dt>
               <dd>{selectedSuggestion.attackFactors.movementFeasibility.toFixed(2)}</dd>
               {selectedSuggestion.attackFactors.majorBonus > 0 && (
-                <><dt>Major base bonus</dt><dd>{selectedSuggestion.attackFactors.majorBonus.toFixed(2)}</dd></>
+                <>
+                  <dt>Major base bonus</dt>
+                  <dd>{selectedSuggestion.attackFactors.majorBonus.toFixed(2)}</dd>
+                </>
               )}
               {selectedSuggestion.attackFactors.momentum > 0 && (
-                <><dt>⚔ Momentum</dt><dd>ACTIVE</dd></>
+                <>
+                  <dt>⚔ Momentum</dt>
+                  <dd>ACTIVE</dd>
+                </>
               )}
               {selectedSuggestion.attackFactors.reliefValue > 0 && (
-                <><dt>Relieves friendlies</dt><dd>{selectedSuggestion.attackFactors.reliefValue} CAP(s)</dd></>
+                <>
+                  <dt>Relieves friendlies</dt>
+                  <dd>{selectedSuggestion.attackFactors.reliefValue} CAP(s)</dd>
+                </>
               )}
               {selectedSuggestion.attackFactors.supplyProximity > 0.05 && (
-                <><dt>📦 Supply proximity</dt><dd>{(selectedSuggestion.attackFactors.supplyProximity * 100).toFixed(0)}%</dd></>
+                <>
+                  <dt>📦 Supply proximity</dt>
+                  <dd>{(selectedSuggestion.attackFactors.supplyProximity * 100).toFixed(0)}%</dd>
+                </>
               )}
             </dl>
           ) : 'strikeFactors' in selectedSuggestion ? (
@@ -890,34 +1033,55 @@ export function TacticalMap() {
               <dt>Enemy density</dt>
               <dd>{selectedSuggestion.strikeFactors.enemyDensity}</dd>
               {selectedSuggestion.strikeFactors.majorBonus > 0 && (
-                <><dt>Major base</dt><dd>Yes</dd></>
+                <>
+                  <dt>Major base</dt>
+                  <dd>Yes</dd>
+                </>
               )}
               {selectedSuggestion.strikeFactors.momentum > 0 && (
-                <><dt>⚔ Ground assault active</dt><dd>CAS requested</dd></>
+                <>
+                  <dt>⚔ Ground assault active</dt>
+                  <dd>CAS requested</dd>
+                </>
               )}
               {selectedSuggestion.strikeFactors.casRelief > 0 && (
-                <><dt>CAS relief</dt><dd>{selectedSuggestion.strikeFactors.casRelief} friendly CAP(s)</dd></>
+                <>
+                  <dt>CAS relief</dt>
+                  <dd>{selectedSuggestion.strikeFactors.casRelief} friendly CAP(s)</dd>
+                </>
               )}
               <dt>Range score</dt>
               <dd>{selectedSuggestion.strikeFactors.rangeScore.toFixed(2)}</dd>
               {selectedSuggestion.strikeFactors.supplyProximity > 0.05 && (
-                <><dt>📦 Supply proximity</dt><dd>{(selectedSuggestion.strikeFactors.supplyProximity * 100).toFixed(0)}%</dd></>
+                <>
+                  <dt>📦 Supply proximity</dt>
+                  <dd>{(selectedSuggestion.strikeFactors.supplyProximity * 100).toFixed(0)}%</dd>
+                </>
               )}
             </dl>
           ) : 'resupplyFactors' in selectedSuggestion ? (
             <dl className={styles.factorGrid}>
               {selectedSuggestion.resupplyFactors.underAttackBonus > 0 && (
-                <><dt>⚠ Under attack</dt><dd>URGENT</dd></>
+                <>
+                  <dt>⚠ Under attack</dt>
+                  <dd>URGENT</dd>
+                </>
               )}
               <dt>Frontline score</dt>
               <dd>{selectedSuggestion.resupplyFactors.frontlineScore.toFixed(2)}</dd>
               {selectedSuggestion.resupplyFactors.majorBonus > 0 && (
-                <><dt>Major base</dt><dd>Yes</dd></>
+                <>
+                  <dt>Major base</dt>
+                  <dd>Yes</dd>
+                </>
               )}
               <dt>Range score</dt>
               <dd>{selectedSuggestion.resupplyFactors.rangeScore.toFixed(2)}</dd>
               {selectedSuggestion.resupplyFactors.supplyProximity > 0.05 && (
-                <><dt>📦 Supply proximity</dt><dd>{(selectedSuggestion.resupplyFactors.supplyProximity * 100).toFixed(0)}%</dd></>
+                <>
+                  <dt>📦 Supply proximity</dt>
+                  <dd>{(selectedSuggestion.resupplyFactors.supplyProximity * 100).toFixed(0)}%</dd>
+                </>
               )}
             </dl>
           ) : 'reinforceFactors' in selectedSuggestion ? (
@@ -925,15 +1089,24 @@ export function TacticalMap() {
               <dt>Isolation</dt>
               <dd>{(selectedSuggestion.reinforceFactors.isolation * 100).toFixed(0)}%</dd>
               {selectedSuggestion.reinforceFactors.majorBonus > 0 && (
-                <><dt>Major base</dt><dd>Yes</dd></>
+                <>
+                  <dt>Major base</dt>
+                  <dd>Yes</dd>
+                </>
               )}
               {selectedSuggestion.reinforceFactors.friendlySupport > 0 && (
-                <><dt>Friendly neighbors</dt><dd>{selectedSuggestion.reinforceFactors.friendlySupport}</dd></>
+                <>
+                  <dt>Friendly neighbors</dt>
+                  <dd>{selectedSuggestion.reinforceFactors.friendlySupport}</dd>
+                </>
               )}
               <dt>Range score</dt>
               <dd>{selectedSuggestion.reinforceFactors.rangeScore.toFixed(2)}</dd>
               {selectedSuggestion.reinforceFactors.supplyProximity > 0.05 && (
-                <><dt>📦 Supply proximity</dt><dd>{(selectedSuggestion.reinforceFactors.supplyProximity * 100).toFixed(0)}%</dd></>
+                <>
+                  <dt>📦 Supply proximity</dt>
+                  <dd>{(selectedSuggestion.reinforceFactors.supplyProximity * 100).toFixed(0)}%</dd>
+                </>
               )}
             </dl>
           ) : null}
