@@ -1,4 +1,5 @@
-import type { Owner } from '@/state/ownershipReducer'
+import { memo, useCallback } from 'react'
+import type { Owner, OwnershipAction } from '@/state/ownershipReducer'
 import styles from './CAPControl.module.css'
 
 const OWNER_LABELS: Record<Owner, string> = {
@@ -21,29 +22,78 @@ interface CAPBadgeProps {
   isAttacking: boolean
   hasRadio: boolean
   isHQ: boolean
-  onCycle: () => void
-  onSetOwner: (owner: Owner) => void
-  onSetLav: () => void
-  onToggleAttack: () => void
-  onToggleAttacking: () => void
-  onToggleRadio: () => void
-  onToggleHQ: () => void
+  dispatch: React.Dispatch<OwnershipAction>
 }
 
-export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition, isUnderAttack, isFriendly, isEnemy, isAttacking, hasRadio, isHQ, onCycle, onSetOwner, onSetLav, onToggleAttack, onToggleAttacking, onToggleRadio, onToggleHQ }: CAPBadgeProps) {
+function CAPBadgeInner({
+  capId,
+  name,
+  shortName,
+  owner,
+  isLavPosition,
+  isUnderAttack,
+  isFriendly,
+  isEnemy,
+  isAttacking,
+  hasRadio,
+  isHQ,
+  dispatch,
+}: CAPBadgeProps) {
+  const handleOwnerClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.shiftKey) {
+        dispatch({ type: 'CYCLE_OWNER', capId })
+        return
+      }
+      dispatch({ type: 'SET_OWNER', capId, owner: owner === 'US' ? 'neutral' : 'US' })
+    },
+    [dispatch, capId, owner],
+  )
+
+  const handleOwnerContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      dispatch({ type: 'SET_OWNER', capId, owner: owner === 'RUS' ? 'neutral' : 'RUS' })
+    },
+    [dispatch, capId, owner],
+  )
+
+  const handleToggleAttack = useCallback(
+    () => dispatch({ type: 'TOGGLE_UNDER_ATTACK', capId }),
+    [dispatch, capId],
+  )
+
+  const handleToggleAttacking = useCallback(
+    () => dispatch({ type: 'TOGGLE_ATTACKING', capId }),
+    [dispatch, capId],
+  )
+
+  const handleToggleRadio = useCallback(
+    () => dispatch({ type: 'TOGGLE_RADIO', capId }),
+    [dispatch, capId],
+  )
+
+  const handleToggleHQ = useCallback(
+    () => dispatch({ type: 'TOGGLE_HQ', capId }),
+    [dispatch, capId],
+  )
+
+  const handleSetLav = useCallback(
+    () =>
+      dispatch({
+        type: 'SET_LAV_POSITION',
+        capId: isLavPosition ? null : capId,
+      }),
+    [dispatch, capId, isLavPosition],
+  )
+
   return (
     <div className={`${styles.badge} ${styles[owner]} ${isLavPosition ? styles.lavActive : ''}`}>
       <button
         type="button"
         className={styles.ownerBtn}
-        onClick={(e) => {
-          if (e.shiftKey) { onCycle(); return }
-          onSetOwner(owner === 'US' ? 'neutral' : 'US')
-        }}
-        onContextMenu={(e) => {
-          e.preventDefault()
-          onSetOwner(owner === 'RUS' ? 'neutral' : 'RUS')
-        }}
+        onClick={handleOwnerClick}
+        onContextMenu={handleOwnerContextMenu}
         title={`Left-click: US ↔ Neutral · Right-click: RUS ↔ Neutral · Shift+Click: cycle (current: ${owner})`}
         aria-label={`${name} ownership: ${owner}. Left-click for US, right-click for RUS.`}
       >
@@ -54,9 +104,13 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
         <button
           type="button"
           className={`${styles.attackBtn} ${isUnderAttack ? styles.attackActive : ''}`}
-          onClick={onToggleAttack}
+          onClick={handleToggleAttack}
           title={isUnderAttack ? 'Clear under-attack flag' : 'Mark as under attack'}
-          aria-label={isUnderAttack ? `${name}: under attack. Click to clear.` : `Mark ${name} as under attack`}
+          aria-label={
+            isUnderAttack
+              ? `${name}: under attack. Click to clear.`
+              : `Mark ${name} as under attack`
+          }
         >
           ⚠
         </button>
@@ -65,9 +119,13 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
         <button
           type="button"
           className={`${styles.attackingBtn} ${isAttacking ? styles.attackingActive : ''}`}
-          onClick={onToggleAttacking}
+          onClick={handleToggleAttacking}
           title={isAttacking ? 'Clear attacking flag' : 'Mark as being attacked'}
-          aria-label={isAttacking ? `${name}: being attacked. Click to clear.` : `Mark ${name} as being attacked`}
+          aria-label={
+            isAttacking
+              ? `${name}: being attacked. Click to clear.`
+              : `Mark ${name} as being attacked`
+          }
         >
           ⚔
         </button>
@@ -75,9 +133,15 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
       <button
         type="button"
         className={`${styles.radioBtn} ${hasRadio ? styles.radioActive : ''}`}
-        onClick={onToggleRadio}
-        title={hasRadio ? 'Radio antenna ACTIVE — part of the network. Click to disable.' : 'Radio antenna inactive. Click to enable (becomes a network node).'}
-        aria-label={hasRadio ? `${name}: radio active. Click to disable.` : `Enable radio antenna at ${name}`}
+        onClick={handleToggleRadio}
+        title={
+          hasRadio
+            ? 'Radio antenna ACTIVE — part of the network. Click to disable.'
+            : 'Radio antenna inactive. Click to enable (becomes a network node).'
+        }
+        aria-label={
+          hasRadio ? `${name}: radio active. Click to disable.` : `Enable radio antenna at ${name}`
+        }
       >
         📡
       </button>
@@ -85,7 +149,7 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
         <button
           type="button"
           className={`${styles.hqBtn} ${isHQ ? styles.hqActive : ''}`}
-          onClick={onToggleHQ}
+          onClick={handleToggleHQ}
           title={isHQ ? `HQ for ${owner} — click to clear` : `Designate ${name} as ${owner} HQ`}
           aria-label={isHQ ? `${name}: HQ. Click to clear.` : `Designate ${name} as HQ`}
         >
@@ -95,7 +159,7 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
       <button
         type="button"
         className={styles.lavBtn}
-        onClick={onSetLav}
+        onClick={handleSetLav}
         title={isLavPosition ? 'LAV is here' : 'Set as LAV position'}
         aria-label={isLavPosition ? `LAV at ${name}` : `Set LAV position to ${name}`}
       >
@@ -104,5 +168,7 @@ export function CAPBadge({ capId: _capId, name, shortName, owner, isLavPosition,
     </div>
   )
 }
+
+export const CAPBadge = memo(CAPBadgeInner)
 
 export { OWNER_ORDER }

@@ -15,12 +15,17 @@ export function OwnershipPanel() {
   const groups = useMemo(() => {
     const sorted = [...everonCAPs].sort((a, b) => b.coords.lat - a.coords.lat)
     const friendly = sorted.filter((c) => (state.ownership[c.id] ?? 'neutral') === state.playerTeam)
-    const enemy    = sorted.filter((c) => (state.ownership[c.id] ?? 'neutral') === enemyTeam)
-    const neutral  = sorted.filter((c) => (state.ownership[c.id] ?? 'neutral') === 'neutral')
+    const enemy = sorted.filter((c) => (state.ownership[c.id] ?? 'neutral') === enemyTeam)
+    const neutral = sorted.filter((c) => (state.ownership[c.id] ?? 'neutral') === 'neutral')
     return [
-      { key: 'friendly', label: `${state.playerTeam} (Friendly)`, caps: friendly, modifier: styles.groupFriendly },
-      { key: 'enemy',    label: `${enemyTeam} (Enemy)`,            caps: enemy,    modifier: styles.groupEnemy },
-      { key: 'neutral',  label: 'Neutral',                          caps: neutral,  modifier: styles.groupNeutral },
+      {
+        key: 'friendly',
+        label: `${state.playerTeam} (Friendly)`,
+        caps: friendly,
+        modifier: styles.groupFriendly,
+      },
+      { key: 'enemy', label: `${enemyTeam} (Enemy)`, caps: enemy, modifier: styles.groupEnemy },
+      { key: 'neutral', label: 'Neutral', caps: neutral, modifier: styles.groupNeutral },
     ]
   }, [state.ownership, state.playerTeam, enemyTeam])
 
@@ -52,7 +57,11 @@ export function OwnershipPanel() {
           <option value="manual">Manual</option>
           <option value="mock-telemetry">Mock Telemetry (demo)</option>
         </select>
-        {isLive && <span className={styles.liveIndicator} aria-label="Live feed active">● LIVE</span>}
+        {isLive && (
+          <span className={styles.liveIndicator} aria-label="Live feed active">
+            ● LIVE
+          </span>
+        )}
       </div>
 
       <div className={styles.groups}>
@@ -78,18 +87,7 @@ export function OwnershipPanel() {
                     isAttacking={state.attacking.has(cap.id)}
                     hasRadio={state.radio.has(cap.id)}
                     isHQ={state.hq.has(cap.id)}
-                    onCycle={() => dispatch({ type: 'CYCLE_OWNER', capId: cap.id })}
-                    onSetOwner={(o) => dispatch({ type: 'SET_OWNER', capId: cap.id, owner: o })}
-                    onSetLav={() =>
-                      dispatch({
-                        type: 'SET_LAV_POSITION',
-                        capId: state.lavPosition === cap.id ? null : cap.id,
-                      })
-                    }
-                    onToggleAttack={() => dispatch({ type: 'TOGGLE_UNDER_ATTACK', capId: cap.id })}
-                    onToggleAttacking={() => dispatch({ type: 'TOGGLE_ATTACKING', capId: cap.id })}
-                    onToggleRadio={() => dispatch({ type: 'TOGGLE_RADIO', capId: cap.id })}
-                    onToggleHQ={() => dispatch({ type: 'TOGGLE_HQ', capId: cap.id })}
+                    dispatch={dispatch}
                   />
                 )
               })}

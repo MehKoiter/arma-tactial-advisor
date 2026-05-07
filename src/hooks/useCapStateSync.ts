@@ -1,11 +1,15 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { OwnershipState, OwnershipAction, CapStateRow, Owner } from '@/state/ownershipReducer'
 import { cycleOwner } from '@/state/ownershipReducer'
 import everonCAPs from '@/data/everonCAPs'
 import { useRoom } from '@/providers/RoomContext'
 
-async function upsertCap(roomId: string, capId: string, patch: Partial<Omit<CapStateRow, 'cap_id'>>) {
+async function upsertCap(
+  roomId: string,
+  capId: string,
+  patch: Partial<Omit<CapStateRow, 'cap_id'>>,
+) {
   await supabase
     .from('cap_ownership')
     .upsert({ room_id: roomId, cap_id: capId, ...patch }, { onConflict: 'room_id,cap_id' })
@@ -65,7 +69,12 @@ async function syncAction(roomId: string, action: OwnershipAction, state: Owners
       // HQ, clear is_hq on any other CAP currently owned by the same faction.
       if (turningOn && owner !== 'neutral') {
         const others = everonCAPs
-          .filter((c) => c.id !== action.capId && state.hq.has(c.id) && (state.ownership[c.id] ?? 'neutral') === owner)
+          .filter(
+            (c) =>
+              c.id !== action.capId &&
+              state.hq.has(c.id) &&
+              (state.ownership[c.id] ?? 'neutral') === owner,
+          )
           .map((c) => ({ room_id: roomId, cap_id: c.id, is_hq: false }))
         if (others.length) {
           await supabase.from('cap_ownership').upsert(others, { onConflict: 'room_id,cap_id' })
@@ -91,6 +100,13 @@ export function useCapStateSync(
 ): React.Dispatch<OwnershipAction> {
   const { slug: roomId } = useRoom()
 
+  // Keep a ref to state so syncedDispatch can read the latest value without
+  // being recreated on every state change.
+  const stateRef = useRef(state)
+  useEffect(() => {
+    stateRef.current = state
+  })
+
   // Initial fetch — load whatever is already in the DB for this room
   useEffect(() => {
     supabase
@@ -100,7 +116,7 @@ export function useCapStateSync(
       .then(({ data }) => {
         if (data?.length) dispatch({ type: 'HYDRATE', rows: data as CapStateRow[] })
       })
-  }, [roomId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [roomId, dispatch])
 
   // Realtime subscription — receive changes made by other clients
   useEffect(() => {
@@ -116,16 +132,19 @@ export function useCapStateSync(
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [roomId]) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [roomId, dispatch])
 
-  // Wrapped dispatch: optimistic local update + background Supabase sync
+  // Wrapped dispatch: optimistic local update + background Supabase sync.
+  // Reads state from a ref so this function is stable for the lifetime of the room.
   const syncedDispatch = useCallback(
     (action: OwnershipAction) => {
       dispatch(action)
-      void syncAction(roomId, action, state)
+      void syncAction(roomId, action, stateRef.current)
     },
-    [roomId, state, dispatch],
+    [roomId, dispatch],
   )
 
   return syncedDispatch
