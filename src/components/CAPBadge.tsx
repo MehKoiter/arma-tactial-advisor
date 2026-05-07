@@ -99,7 +99,7 @@ function CAPBadgeInner({
       >
         {OWNER_LABELS[owner]}
       </button>
-      <span className={styles.capName}>{name.length <= 10 ? name : (shortName ?? name)}</span>
+      <span className={styles.capName}>{name}</span>
       {!isEnemy && (
         <button
           type="button"

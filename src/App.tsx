@@ -14,6 +14,11 @@ const MIN_WIDTH = 160
 const MAX_WIDTH = 600
 const DEFAULT_WIDTH = 240
 
+const OWN_WIDTH_KEY = 'lav-own-panel-width'
+const OWN_MIN_WIDTH = 160
+const OWN_MAX_WIDTH = 400
+const OWN_DEFAULT_WIDTH = 220
+
 const VEHICLE_OPTIONS: Record<'US' | 'RUS', { type: VehicleType; label: string }[]> = {
   US: [
     { type: 'LAV', label: '🚗 LAV-25' },
@@ -43,6 +48,37 @@ function App() {
   )
   const panelWidthRef = useRef(panelWidth)
   panelWidthRef.current = panelWidth
+
+  const [ownPanelWidth, setOwnPanelWidth] = useState<number>(() => {
+    const saved = localStorage.getItem(OWN_WIDTH_KEY)
+    return saved
+      ? Math.max(OWN_MIN_WIDTH, Math.min(OWN_MAX_WIDTH, Number(saved)))
+      : OWN_DEFAULT_WIDTH
+  })
+  const ownPanelWidthRef = useRef(ownPanelWidth)
+  ownPanelWidthRef.current = ownPanelWidth
+
+  function startOwnResize(e: React.PointerEvent<HTMLDivElement>) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = ownPanelWidthRef.current
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+
+    function onMove(ev: PointerEvent) {
+      const next = Math.max(
+        OWN_MIN_WIDTH,
+        Math.min(OWN_MAX_WIDTH, startWidth + ev.clientX - startX),
+      )
+      setOwnPanelWidth(next)
+      localStorage.setItem(OWN_WIDTH_KEY, String(next))
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
 
   function startResize(e: React.PointerEvent<HTMLDivElement>) {
     e.preventDefault()
@@ -121,7 +157,10 @@ function App() {
         </select>
       </header>
       <main className="app-main">
-        <OwnershipPanel />
+        <div className="own-panel-wrapper" style={{ width: ownPanelWidth }}>
+          <OwnershipPanel />
+        </div>
+        <div className="own-resize-handle" onPointerDown={startOwnResize} />
         <TacticalMap />
         <div className="rec-resize-handle" onPointerDown={startResize}>
           <button

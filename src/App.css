@@ -131,6 +131,26 @@
   color: #ef5350;
 }
 
+/* ── Ownership panel resize ────────────────────────────────────────────────── */
+.own-panel-wrapper {
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid var(--border-panel);
+}
+
+.own-resize-handle {
+  width: 6px;
+  flex-shrink: 0;
+  background: var(--bg-header);
+  cursor: col-resize;
+  user-select: none;
+}
+
+.own-resize-handle:hover {
+  background: #1e1e3a;
+}
+
 /* ── Recommendation panel resize ───────────────────────────────────────────── */
 .rec-panel-wrapper {
   flex-shrink: 0;
